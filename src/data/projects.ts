@@ -76,7 +76,7 @@ export const PROJECTS: Project[] = [
       'Evaluated against baseline using accuracy, log loss, Brier score, ROC-AUC, and calibration curves',
     ],
     links: [
-      { label: 'Github repo:', href: '', text: 'NBA Win Predictor Repo' },
+      { label: 'Github repo:', href: 'https://github.com/biu6iu/nba-predictor', text: 'NBA Win Predictor Repo' },
     ],
   },
   {
