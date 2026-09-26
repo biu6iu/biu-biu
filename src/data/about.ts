@@ -67,6 +67,11 @@ export const EDUCATION: TimelineEntry[] = [
 export const EXPERIENCE: TimelineEntry[] = [
   {
     date: '2026',
+    title: 'Software Engineer at Partners In Planning',
+    lines: [{ text: 'Automation' }],
+  },
+  {
+    date: '2026',
     title: 'Research Intern at Chinese University of Hong Kong, Shenzhen',
     lines: [{ text: 'Building machine learning models to predict MOF structures' }],
   },
@@ -84,9 +89,9 @@ export const EXPERIENCE: TimelineEntry[] = [
 
 export const EXTRACURRICULARS: TimelineEntry[] = [
   {
-    date: '2026',
-    title: 'Vice President of the Data Science Students Society at UniMelb',
-    lines: [{text: 'Led a 60+ member committee across five subcommittees (education, industry, events, marketing, and HR)' },
+    date: '2026-',
+    title: 'President of the Data Science Students Society at UniMelb',
+    lines: [{text: 'Led a 60+ member committee across six subcommittees (education, industry, events, marketing, HR, and products)' },
             {text: 'Coordinated initiatives across the society, worked closely with subcommittee leads to translate ideas into success whilst ensuring effective delegation, communication, and execution'},
             {text: 'Oversaw the planning and delivery of diverse events including datathons, educational workshops, networking events, and social events, reaching over 500+ students'},
     ],
