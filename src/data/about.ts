@@ -66,7 +66,7 @@ export const EDUCATION: TimelineEntry[] = [
 
 export const EXPERIENCE: TimelineEntry[] = [
   {
-    date: '2026',
+    date: '2026-',
     title: 'Software Engineer at Partners In Planning',
     lines: [{ text: 'Automation' }],
   },
