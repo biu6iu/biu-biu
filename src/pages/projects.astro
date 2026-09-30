@@ -1,9 +1,9 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import ProjectCard from '../components/ProjectCard.astro';
+import ProjectListItem from '../components/ProjectListItem.astro';
 import SectionHeading from '../components/SectionHeading.astro';
-import GithubActivity from '../components/GithubActivity.astro';
-import { PROJECTS } from '../data/projects.ts';
+import TimelineRow from '../components/TimelineRow.astro';
+import { projectsByYear } from '../data/projects.ts';
 ---
 
 <Layout title="Projects">
@@ -11,8 +11,16 @@ import { PROJECTS } from '../data/projects.ts';
 
     <div class="mb-12">
       <SectionHeading>Projects</SectionHeading>
-      <GithubActivity username="biu6iu" />
-      {PROJECTS.map((project) => <ProjectCard project={project} />)}
+
+      <div class="group/list">
+        {projectsByYear().map(([year, projects]) => (
+          <TimelineRow date={year}>
+            <ul class="list-none m-0 p-0">
+              {projects.map((project) => <ProjectListItem project={project} />)}
+            </ul>
+          </TimelineRow>
+        ))}
+      </div>
     </div>
   </section>
 </Layout>

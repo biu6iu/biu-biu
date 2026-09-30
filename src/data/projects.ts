@@ -5,6 +5,7 @@ export interface ProjectLink {
 }
 
 export interface Project {
+  slug: string;
   date: string;
   title: string;
   summary: string;
@@ -14,6 +15,7 @@ export interface Project {
 
 export const PROJECTS: Project[] = [
   {
+    slug: 'crypto-trading-research-framework',
     date: '2026',
     title: 'Crypto Trading Research Framework',
     summary: 'A systematic trading research framework for cryptocurrency markets',
@@ -28,6 +30,7 @@ export const PROJECTS: Project[] = [
     ],
   },
   {
+    slug: 'automated-plant-watering-device',
     date: '2026',
     title: 'Automated Plant Watering Device',
     summary: 'A device that automatically waters a plant based on environmental factors',
@@ -41,6 +44,7 @@ export const PROJECTS: Project[] = [
     ],
   },
   {
+    slug: 'bass-tab-generator',
     date: '2026',
     title: 'Bass Tab Generator',
     summary: 'Automatically generates bass tabs from an MP3 file',
@@ -53,6 +57,7 @@ export const PROJECTS: Project[] = [
     ],
   },
   {
+    slug: 'naive-bayes-classifier',
     date: '2026',
     title: 'Naive Bayes Classifier',
     summary: 'An end-to-end Naive Bayes classification pipeline',
@@ -66,6 +71,7 @@ export const PROJECTS: Project[] = [
     ],
   },
   {
+    slug: 'nba-win-predictor-model',
     date: '2026',
     title: 'NBA Win Predictor Model',
     summary: 'An XGBoost classification model for predicting NBA regular season outcomes',
@@ -80,6 +86,7 @@ export const PROJECTS: Project[] = [
     ],
   },
   {
+    slug: 'league-of-legends-discord-bot',
     date: '2025',
     title: 'League of Legends Discord Bot',
     summary: 'A Discord bot that retrieves and displays League match history via the Riot Games API',
@@ -91,6 +98,7 @@ export const PROJECTS: Project[] = [
     ],
   },
   {
+    slug: 'prompt-based-chatroom-app',
     date: '2025',
     title: 'Prompt-based Chatroom App',
     summary: 'A chatroom app with prompt-based discussions',
@@ -105,6 +113,7 @@ export const PROJECTS: Project[] = [
     ],
   },
   {
+    slug: 'ai-driver-assistant',
     date: '2025',
     title: 'AI Driver Assistant',
     summary: 'An AI driver assistant that provides real-time feedback and suggestions',
@@ -119,6 +128,7 @@ export const PROJECTS: Project[] = [
     ],
   },
   {
+    slug: 'this-website',
     date: '2024',
     title: 'This Website!',
     summary: 'A simple portfolio website',
@@ -130,3 +140,22 @@ export const PROJECTS: Project[] = [
     ],
   },
 ];
+
+/**
+ * Groups PROJECTS by year (`date`), preserving each project's original
+ * order within its year, with years sorted descending (newest first).
+ */
+export function projectsByYear(): [string, Project[]][] {
+  const groups = new Map<string, Project[]>();
+
+  for (const project of PROJECTS) {
+    const group = groups.get(project.date);
+    if (group) {
+      group.push(project);
+    } else {
+      groups.set(project.date, [project]);
+    }
+  }
+
+  return [...groups.entries()].sort(([a], [b]) => b.localeCompare(a));
+}

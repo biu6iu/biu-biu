@@ -1,0 +1,21 @@
+---
+import type { Project } from '../data/projects.ts';
+
+interface Props {
+  project: Project;
+}
+
+const { project } = Astro.props;
+const base = import.meta.env.BASE_URL;
+---
+
+<li>
+  <a
+    href={`${base}projects/${project.slug}`}
+    class="block text-[1.2rem] font-medium text-ink no-underline py-1
+           transition-opacity duration-300 ease-[ease] motion-reduce:transition-none
+           group-hover/list:opacity-40 hover:opacity-100! focus-visible:opacity-100!"
+  >
+    {project.title}
+  </a>
+</li>
