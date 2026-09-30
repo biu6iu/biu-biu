@@ -1,0 +1,33 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import SectionLink from '../../components/SectionLink.astro';
+import { PROJECTS } from '../../data/projects.ts';
+
+export function getStaticPaths() {
+  return PROJECTS.map((project) => ({
+    params: { slug: project.slug },
+    props: { project },
+  }));
+}
+
+const { project } = Astro.props;
+const base = import.meta.env.BASE_URL;
+---
+
+<Layout title={project.title}>
+  <section class="max-w-200 mx-auto p-8 box-border">
+    <p class="mb-6">
+      <SectionLink href={`${base}projects`} text="← Projects" />
+    </p>
+
+    <SectionHeading>{project.title}</SectionHeading>
+    <p class="text-ink-soft text-[0.9rem] -mt-4 mb-6">{project.date}</p>
+
+    <p>{project.summary}</p>
+    {project.bullets.map((bullet) => <p> • {bullet}</p>)}
+    {project.links.map((link) => (
+      <p> • {link.label} <SectionLink href={link.href} text={link.text} /></p>
+    ))}
+  </section>
+</Layout>
