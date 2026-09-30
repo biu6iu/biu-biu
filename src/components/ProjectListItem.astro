@@ -12,11 +12,14 @@ const base = import.meta.env.BASE_URL;
 <li class="border-b border-line">
   <a
     href={`${base}projects/${project.slug}`}
-    class="block no-underline py-3
+    class="flex items-start justify-between gap-4 no-underline py-3
            transition-opacity duration-300 ease-[ease] motion-reduce:transition-none
            group-hover/list:opacity-40 hover:opacity-100! focus-visible:opacity-100!"
   >
-    <h3 class="text-base font-medium text-ink">{project.title}</h3>
-    <p class="text-ink-muted text-xs mt-1">{project.summary}</p>
+    <div>
+      <h3 class="text-base font-medium text-ink">{project.title}</h3>
+      <p class="text-ink-muted text-xs mt-1">{project.summary}</p>
+    </div>
+    <span aria-hidden="true" class="font-arrow text-ink-muted text-sm mt-1 shrink-0">↗</span>
   </a>
 </li>
