@@ -11,12 +11,12 @@ import { projectsByYear } from '../data/projects.ts';
     <div class="mb-12">
       <SectionHeading>Projects</SectionHeading>
 
-      <div class="group/list border-t border-line">
+      <div class="group/list border-t border-ink">
         {projectsByYear().map(([year, projects], i) => (
           <div
             class:list={[
               'grid grid-cols-[150px_1fr] max-md:grid-cols-[1fr] gap-4 items-start pt-6',
-              { 'border-t border-line mt-6': i > 0 },
+              { 'border-t border-ink mt-6': i > 0 },
             ]}
           >
             <p class="text-ink-soft text-[1rem] col-start-1">{year}</p>

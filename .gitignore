@@ -9,3 +9,5 @@
 
 # Photos are served from Cloudinary
 src/assets/photos/
+
+.env
