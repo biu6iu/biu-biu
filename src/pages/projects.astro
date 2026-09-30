@@ -2,7 +2,6 @@
 import Layout from '../layouts/Layout.astro';
 import ProjectListItem from '../components/ProjectListItem.astro';
 import SectionHeading from '../components/SectionHeading.astro';
-import GithubActivity from '../components/GithubActivity.astro';
 import TimelineRow from '../components/TimelineRow.astro';
 import { projectsByYear } from '../data/projects.ts';
 ---
@@ -12,7 +11,6 @@ import { projectsByYear } from '../data/projects.ts';
 
     <div class="mb-12">
       <SectionHeading>Projects</SectionHeading>
-      <GithubActivity username="biu6iu" />
 
       <div class="group/list">
         {projectsByYear().map(([year, projects]) => (
