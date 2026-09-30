@@ -17,11 +17,11 @@ const base = import.meta.env.BASE_URL;
 <Layout title={project.title}>
   <section class="max-w-200 mx-auto p-8 box-border">
     <p class="mb-6">
-      <a href={`${base}projects`} class="text-ink-soft text-[0.9rem] no-underline hover:text-ink">← Projects</a>
+      <a href={`${base}projects`} class="text-ink-soft text-[1rem] no-underline hover:text-ink">← Projects</a>
     </p>
 
     <h2 class="text-[1.5rem] font-medium">{project.title}</h2>
-    <p class="text-ink-muted text-sm mt-2 mb-6">{project.summary}</p>
+    <p class="text-ink-muted text-base mt-2 mb-6">{project.summary}</p>
 
     <div class="border-t border-line pt-6">
       {project.bullets.map((bullet) => <p> • {bullet}</p>)}
@@ -29,7 +29,7 @@ const base = import.meta.env.BASE_URL;
       <div class="mt-6 flex flex-col gap-4">
         {project.links.map((link) => (
           <div>
-            <p class="text-ink-soft text-[0.8rem]">{link.label.replace(/:$/, '')}</p>
+            <p class="text-ink-soft text-[0.9rem]">{link.label.replace(/:$/, '')}</p>
             <p class="mt-1"><SectionLink href={link.href} text={link.text} /></p>
           </div>
         ))}

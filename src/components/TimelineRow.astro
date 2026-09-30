@@ -10,7 +10,7 @@ const { date, title } = Astro.props;
 ---
 
 <div class="mb-8 grid grid-cols-[150px_1fr] max-md:grid-cols-[1fr] gap-4 max-md:gap-2 items-baseline">
-  <p class="text-ink-soft text-[0.9rem] col-start-1">{date}</p>
+  <p class="text-ink-soft text-[1rem] col-start-1">{date}</p>
   <div class="col-start-2 max-md:col-start-1">
     {title && <h3 class="text-[1.2rem] mb-2 font-medium">{title}</h3>}
     <slot />
