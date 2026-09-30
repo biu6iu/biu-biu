@@ -2,7 +2,6 @@
 import Layout from '../layouts/Layout.astro';
 import ProjectListItem from '../components/ProjectListItem.astro';
 import SectionHeading from '../components/SectionHeading.astro';
-import TimelineRow from '../components/TimelineRow.astro';
 import { projectsByYear } from '../data/projects.ts';
 ---
 
@@ -12,13 +11,19 @@ import { projectsByYear } from '../data/projects.ts';
     <div class="mb-12">
       <SectionHeading>Projects</SectionHeading>
 
-      <div class="group/list">
-        {projectsByYear().map(([year, projects]) => (
-          <TimelineRow date={year}>
-            <ul class="list-none m-0 p-0">
+      <div class="group/list border-t border-line">
+        {projectsByYear().map(([year, projects], i) => (
+          <div
+            class:list={[
+              'grid grid-cols-[150px_1fr] max-md:grid-cols-[1fr] gap-4 items-start pt-6',
+              { 'border-t border-line mt-6': i > 0 },
+            ]}
+          >
+            <p class="text-ink-soft text-[0.9rem] col-start-1">{year}</p>
+            <ul class="col-start-2 max-md:col-start-1 list-none m-0 p-0">
               {projects.map((project) => <ProjectListItem project={project} />)}
             </ul>
-          </TimelineRow>
+          </div>
         ))}
       </div>
     </div>
