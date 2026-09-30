@@ -7,11 +7,27 @@ const NAV_ITEMS = [
 ];
 
 const base = import.meta.env.BASE_URL;
+const currentPath = Astro.url.pathname;
+
+function isActive(path: string): boolean {
+  const target = `${base}${path}`;
+  if (currentPath === target || currentPath === `${target}/` || currentPath.startsWith(`${target}/`)) {
+    return true;
+  }
+  
+  return path === 'photography' && (currentPath === `${base}collections` || currentPath.startsWith(`${base}collections/`));
+}
 
 const linkClass =
-  'block p-2.5 max-xs:p-2 text-[12px] max-xs:text-[11px] no-underline text-ink rounded-lg ' +
+  'block p-2.5 max-xs:p-2 text-[13px] max-xs:text-[12px] no-underline text-ink rounded-lg ' +
   'transition-[color,background-color,transform] duration-300 ease-[ease] hover:text-ink-muted ' +
   'active:text-ink-muted active:scale-95';
+
+const navLinkBaseClass =
+  'block p-2.5 max-xs:p-2 text-[13px] max-xs:text-[12px] no-underline rounded-lg ' +
+  'transition-[color,background-color,transform] duration-300 ease-[ease] active:scale-95';
+const activeNavLinkClass = `${navLinkBaseClass} text-ink`;
+const inactiveNavLinkClass = `${navLinkBaseClass} text-ink-muted hover:text-ink active:text-ink-muted`;
 ---
 
 <nav
@@ -29,7 +45,11 @@ const linkClass =
              max-md:flex-row max-md:justify-center max-md:flex-wrap max-md:gap-5 max-xs:gap-2.5"
     >
       {NAV_ITEMS.map((item) => (
-        <li><a href={`${base}${item.path}`} class={linkClass}>{item.label}</a></li>
+        <li>
+          <a href={`${base}${item.path}`} class={isActive(item.path) ? activeNavLinkClass : inactiveNavLinkClass}>
+            {item.label}
+          </a>
+        </li>
       ))}
       <li>
         <button id="theme-toggle" class={`${linkClass} bg-transparent border-0 cursor-pointer font-serif uppercase`}>

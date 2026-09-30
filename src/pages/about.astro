@@ -21,22 +21,28 @@ const base = import.meta.env.BASE_URL;
 
     <div class="mb-12">
       <SectionHeading>Education</SectionHeading>
-      {EDUCATION.map((entry) => <TimelineEntry entry={entry} />)}
+      <div class="border-t border-ink">
+        {EDUCATION.map((entry) => <TimelineEntry entry={entry} />)}
+      </div>
     </div>
 
     <div class="mb-12">
       <SectionHeading>Experience</SectionHeading>
-      {EXPERIENCE.map((entry) => <TimelineEntry entry={entry} />)}
+      <div class="border-t border-ink">
+        {EXPERIENCE.map((entry) => <TimelineEntry entry={entry} />)}
+      </div>
     </div>
 
     <div class="mb-12">
       <SectionHeading>Extracurriculars</SectionHeading>
-      {EXTRACURRICULARS.map((entry) => <TimelineEntry entry={entry} bulleted />)}
+      <div class="border-t border-ink">
+        {EXTRACURRICULARS.map((entry) => <TimelineEntry entry={entry} bulleted />)}
+      </div>
     </div>
 
     <div class="mb-12">
       <SectionHeading>Skills</SectionHeading>
-      <div class="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] max-md:grid-cols-[1fr] gap-8 mt-4">
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] max-md:grid-cols-[1fr] gap-8 pt-6 border-t border-ink">
         <div class="mb-6">
           <h3 class="text-[1.2rem] mb-2 font-medium">Programming</h3>
           <p class="text-ink-body leading-[1.6]">Python, Java, C, C++, R, SQL</p>
@@ -46,16 +52,6 @@ const base = import.meta.env.BASE_URL;
           <p class="text-ink-body leading-[1.6]">Git, FastAPI, Pandas, NumPy, sklearn, PyTorch, MatPlotLib, Seaborn</p>
         </div>
       </div>
-    </div>
-
-    <div class="mb-12">
-      <SectionHeading>Projects</SectionHeading>
-      <p>Check out my <SectionLink href={`${base}projects`} text="projects page" /> to see what I've been working on.</p>
-    </div>
-
-    <div class="mb-12">
-      <SectionHeading>Contact</SectionHeading>
-      <p>Find my contact information on the <SectionLink href={`${base}contact`} text="contact page" />.</p>
     </div>
 
     <div class="mb-12">
