@@ -6,6 +6,9 @@ const NAV_ITEMS = [
   { label: 'PHOTOGRAPHY', path: 'photography' },
 ];
 
+const LASTFM_USER = 'biubiuuu';
+const LASTFM_KEY = import.meta.env.PUBLIC_LASTFM_API_KEY ?? '';
+
 const base = import.meta.env.BASE_URL;
 const currentPath = Astro.url.pathname;
 
@@ -58,6 +61,18 @@ const inactiveNavLinkClass = `${navLinkBaseClass} text-ink-muted hover:text-ink 
       </li>
     </ul>
   </div>
+
+  <div
+    id="now-playing"
+    hidden
+    class="max-md:hidden absolute bottom-5 inset-x-0 text-center px-6"
+    data-user={LASTFM_USER}
+    data-key={LASTFM_KEY}
+  >
+    <p id="now-playing-label" class="text-ink-muted text-[11px] tracking-widest uppercase"></p>
+    <a id="now-playing-track" target="_blank" rel="noopener noreferrer" class="block text-ink text-[15px] no-underline hover:text-ink-muted truncate"></a>
+    <p id="now-playing-artist" class="text-ink-muted text-[13px] truncate"></p>
+  </div>
 </nav>
 
 <script>
@@ -76,4 +91,46 @@ const inactiveNavLinkClass = `${navLinkBaseClass} text-ink-muted hover:text-ink 
     const isDark = document.documentElement.classList.contains('dark-mode');
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
   });
+</script>
+
+<!-- Inline so a cached track renders during parsing, before first paint (no flash on navigation). -->
+<script is:inline>
+  (function () {
+    var el = document.getElementById('now-playing');
+    if (!el || !el.dataset.key) return;
+    var CACHE_KEY = 'lastfm-track';
+    var MAX_AGE = 30000;
+
+    function render(t) {
+      document.getElementById('now-playing-label').textContent = t.live ? 'Listening to' : 'Last listened to';
+      var link = document.getElementById('now-playing-track');
+      link.textContent = t.name;
+      link.href = t.url;
+      document.getElementById('now-playing-artist').textContent = t.artist;
+      el.hidden = false;
+    }
+
+    var cached = null;
+    try { cached = JSON.parse(sessionStorage.getItem(CACHE_KEY)); } catch (e) {}
+    if (cached && cached.track) render(cached.track);
+    if (cached && Date.now() - cached.at < MAX_AGE) return;
+
+    var url = 'https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=' + el.dataset.user +
+      '&api_key=' + el.dataset.key + '&limit=1&format=json';
+    fetch(url)
+      .then(function (res) { return res.ok ? res.json() : Promise.reject(res.status); })
+      .then(function (data) {
+        var track = data.recenttracks && data.recenttracks.track && data.recenttracks.track[0];
+        if (!track) return;
+        var t = {
+          live: !!(track['@attr'] && track['@attr'].nowplaying === 'true'),
+          name: track.name,
+          url: track.url,
+          artist: track.artist['#text'],
+        };
+        render(t);
+        try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), track: t })); } catch (e) {}
+      })
+      .catch(function (err) { console.error('[Nav] last.fm fetch failed:', err); });
+  })();
 </script>
