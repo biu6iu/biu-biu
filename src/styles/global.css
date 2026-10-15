@@ -49,9 +49,6 @@
 
   --font-serif: "Garamond", serif;
 
-  /* The ↗ glyph rendered in a sans stack */
-  --font-arrow: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-
   --breakpoint-xs: 30rem;
 }
 
