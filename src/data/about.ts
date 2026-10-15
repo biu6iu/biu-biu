@@ -46,7 +46,7 @@ export const EDUCATION: TimelineEntry[] = [
     date: '2025',
     title: 'Shanghai Jiaotong University',
     lines: [
-      { text: 'Exchange semester' },
+      { text: 'Exchange semester at SJTU Global College' },
       {
         prefix: 'Courses:',
         links: [
@@ -68,7 +68,7 @@ export const EXPERIENCE: TimelineEntry[] = [
   {
     date: '2026-',
     title: 'Software Engineer at Partners In Planning',
-    lines: [{ text: 'Automation' }],
+    lines: [{ text: 'Automating document generation and working on web development using SvelteKit' }],
   },
   {
     date: '2026',
@@ -78,7 +78,7 @@ export const EXPERIENCE: TimelineEntry[] = [
   {
     date: '2025 - 2026',
     title: 'Backend Developer at Circula',
-    lines: [{ text: 'Building, maintaining and testing APIs for Circula' }],
+    lines: [{ text: 'Building, maintaining and testing APIs for Circula, a start up for aggregrating uni events in one place' }],
   },
   {
     date: '2025',
