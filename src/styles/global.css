@@ -41,12 +41,6 @@
   --color-accent-hover: var(--accent-hover);
   --color-line: var(--border);
 
-  --color-gh-0: var(--border);
-  --color-gh-1: color-mix(in srgb, var(--accent) 25%, var(--bg-secondary));
-  --color-gh-2: color-mix(in srgb, var(--accent) 50%, var(--bg-secondary));
-  --color-gh-3: color-mix(in srgb, var(--accent) 75%, var(--bg-secondary));
-  --color-gh-4: var(--accent);
-
   --font-serif: "Garamond", serif;
 
   --breakpoint-xs: 30rem;
