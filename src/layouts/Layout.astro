@@ -4,12 +4,18 @@ import '../styles/global.css';
 
 interface Props {
   title: string;
+  description?: string;
   center?: boolean;
 }
 
-const { title, center = false } = Astro.props;
+const {
+  title,
+  description = "Steven's personal website. Computing and maths student at the University of Melbourne, interested in machine learning. Projects, photography and more.",
+  center = false,
+} = Astro.props;
 
 const base = import.meta.env.BASE_URL;
+const canonical = new URL(Astro.url.pathname, Astro.site);
 
 const mainClass = [
   'flex-1 overflow-y-auto h-screen max-md:h-auto max-md:min-h-0 box-border p-5',
@@ -23,6 +29,12 @@ const mainClass = [
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
     <link rel="icon" href={`${base}favicon.ico`} sizes="any" />
     <script is:inline>
       if (localStorage.getItem('theme') === 'dark') {
