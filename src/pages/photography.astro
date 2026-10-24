@@ -5,7 +5,7 @@ import CollectionTitle from '../components/CollectionTitle.astro';
 import { COLLECTIONS } from '../data/collections.ts';
 ---
 
-<Layout title="Collections">
+<Layout title="Photography" description="Photography collections by Steven Lu: Sydney, Melbourne, China, New Zealand and film archives.">
   <section class="flex flex-wrap justify-start max-md:justify-center gap-5 w-full pb-5">
     <CollectionTitle>PHOTOGRAPHY COLLECTIONS</CollectionTitle>
     {COLLECTIONS.map((collection) => <CollectionCard collection={collection} />)}

@@ -2,23 +2,32 @@
 import Nav from '../components/Nav.astro';
 import '../styles/global.css';
 
+import { COLLECTIONS } from '../data/collections.ts';
+
 interface Props {
-  title: string;
+  /** Page name; " · Steven Lu" is appended. Omit on the home page. */
+  title?: string;
   description?: string;
+  /** Absolute URL for link previews; defaults to the first collection cover. */
+  image?: string;
   center?: boolean;
 }
+
+const SITE_NAME = 'Steven Lu';
 
 const {
   title,
   description = "Steven's personal website. Computing and maths student at the University of Melbourne, interested in machine learning. Projects, photography and more.",
+  image = COLLECTIONS[0].coverImage,
   center = false,
 } = Astro.props;
 
+const fullTitle = title ? `${title} · ${SITE_NAME}` : SITE_NAME;
 const base = import.meta.env.BASE_URL;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 
 const mainClass = [
-  'flex-1 overflow-y-auto h-screen max-md:h-auto max-md:min-h-0 box-border p-5',
+  'flex-1 overflow-y-auto h-dvh max-md:h-auto max-md:min-h-0 box-border p-5',
   center ? 'flex justify-center items-center text-center' : '',
 ].join(' ');
 ---
@@ -28,22 +37,31 @@ const mainClass = [
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{title}</title>
+    <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content={title} />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={image} />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href={`${base}favicon.ico`} sizes="any" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&display=swap" />
     <script is:inline>
-      if (localStorage.getItem('theme') === 'dark') {
-        document.documentElement.classList.add('dark-mode');
-      }
+      // localStorage can throw when site data is blocked
+      try {
+        if (localStorage.getItem('theme') === 'dark') {
+          document.documentElement.classList.add('dark-mode');
+        }
+      } catch (e) {}
     </script>
   </head>
-  <body class="m-0 p-0 font-serif text-ink bg-page flex h-screen">
-    <div class="flex max-md:flex-col w-full min-h-screen max-md:h-auto overflow-hidden">
+  <body class="m-0 p-0 font-serif text-ink bg-page flex h-dvh">
+    <div class="flex max-md:flex-col w-full min-h-dvh max-md:h-auto overflow-hidden">
       <Nav />
       <main class={mainClass}>
         <slot />
