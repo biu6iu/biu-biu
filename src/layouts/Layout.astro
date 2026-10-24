@@ -13,6 +13,7 @@ interface Props {
 }
 
 const SITE_NAME = 'Steven Lu';
+const SOURCE_URL = 'https://github.com/biu6iu/biu-biu';
 
 const {
   title,
@@ -67,7 +68,11 @@ const mainClass = 'flex-1 flex flex-col overflow-y-auto h-dvh max-md:h-auto max-
         <div class="flex-[1_0_auto]">
           <slot />
         </div>
-        <footer class="shrink-0 pt-4 text-center text-xs text-ink-muted">&copy; {year} {SITE_NAME}</footer>
+        <footer class="shrink-0 pt-4 text-right max-md:text-center text-ink-muted">
+          <p class="m-0 text-xs">
+            &copy; {year} {SITE_NAME} · Photos are my own, please ask before reusing them ·
+          </p>
+        </footer>
       </main>
     </div>
 
