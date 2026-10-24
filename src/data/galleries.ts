@@ -9,7 +9,8 @@ export interface Gallery {
   images: GalleryImage[];
 }
 
-const CLOUDINARY_BASE = 'https://res.cloudinary.com/dmajxoe5p/image/upload/';
+// f_auto/q_auto serve WebP/AVIF at a sensible quality; the originals are 5-10 MB each
+export const CLOUDINARY_BASE = 'https://res.cloudinary.com/dmajxoe5p/image/upload/f_auto,q_auto,w_1600/';
 
 function photos(ids: string[]): GalleryImage[] {
   return ids.map((id, i) => ({ src: `${CLOUDINARY_BASE}${id}`, alt: `Photo ${i + 1}` }));
@@ -49,7 +50,7 @@ export const GALLERIES: Gallery[] = [
   },
   {
     slug: 'china_trip_2',
-    title: 'CHONGQING, SHENZHEN, & HONGKONG',
+    title: 'CHONGQING, SHENZHEN, & HONG KONG',
     images: photos([
       'v1755494383/Resize_Image_10MB_4_vwl6rs.jpg',
       'v1755494366/DSCF4187_tdpanm.jpg',

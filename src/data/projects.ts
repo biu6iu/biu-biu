@@ -78,7 +78,7 @@ export const PROJECTS: Project[] = [
     bullets: [
       'Engineered rolling and differential features including scoring averages, win percentages, point differentials, and schedule factors',
       'Hyperparameters tuned via Bayesian optimisation with time-series cross-validation',
-      'calibrated using Platt scaling with threshold optimisation via precision-recall analysis',
+      'Calibrated using Platt scaling with threshold optimisation via precision-recall analysis',
       'Evaluated against baseline using accuracy, log loss, Brier score, ROC-AUC, and calibration curves',
     ],
     links: [
@@ -120,7 +120,7 @@ export const PROJECTS: Project[] = [
     bullets: [
       'Aimed to lower driver fatigue and help drivers stay focused whilst driving',
       'Built mainly with Langchain and OpenCV for focus detection',
-      'Never fully trialed the app but taught me alot about AI integration in real-world applications',
+      'Never fully trialed the app but taught me a lot about AI integration in real-world applications',
       'Project for Unihack 2025',
     ],
     links: [

@@ -66,7 +66,7 @@ export const EDUCATION: TimelineEntry[] = [
 
 export const EXPERIENCE: TimelineEntry[] = [
   {
-    date: '2026-',
+    date: '2026 — Present',
     title: 'Software Engineer at Partners In Planning',
     lines: [{ text: 'Automating document generation and working on web development using SvelteKit' }],
   },
@@ -76,9 +76,9 @@ export const EXPERIENCE: TimelineEntry[] = [
     lines: [{ text: 'Building machine learning models to predict MOF structures' }],
   },
   {
-    date: '2025 - 2026',
+    date: '2025 — 2026',
     title: 'Backend Developer at Circula',
-    lines: [{ text: 'Building, maintaining and testing APIs for Circula, a start up for aggregrating uni events in one place' }],
+    lines: [{ text: 'Building, maintaining and testing APIs for Circula, a start up for aggregating uni events in one place' }],
   },
   {
     date: '2025',
@@ -89,11 +89,11 @@ export const EXPERIENCE: TimelineEntry[] = [
 
 export const EXTRACURRICULARS: TimelineEntry[] = [
   {
-    date: '2026-',
+    date: '2026 — Present',
     title: 'President of the Data Science Students Society at UniMelb',
     lines: [{text: 'Led a 60+ member committee across six subcommittees (education, industry, events, marketing, HR, and products)' },
             {text: 'Coordinated initiatives across the society, worked closely with subcommittee leads to translate ideas into success whilst ensuring effective delegation, communication, and execution'},
-            {text: 'Oversaw the planning and delivery of diverse events including datathons, educational workshops, networking events, and social events, reaching over 500+ students'},
+            {text: 'Oversaw the planning and delivery of diverse events including datathons, educational workshops, networking events, and social events, reaching 500+ students'},
     ],
   },
   {
@@ -108,7 +108,7 @@ export const EXTRACURRICULARS: TimelineEntry[] = [
     date: '2024',
     title: 'Media Director at HackMelbourne',
     lines: [{text: 'Led a team of 4 in handling media related tasks for HackMelbourne, including photographing and filming events, creating marketing material, and posting short form videos'},
-            {text: 'Garnered over 15 million cummulative views during my time as media director, with the top video hitting 12 million views'},
+            {text: 'Garnered over 15 million cumulative views during my time as media director, with the top video hitting 12 million views'},
             {text: 'Grew the Instagram account from 700 followers to 5000+ followers over the span of 1 year'}
     ],
   }

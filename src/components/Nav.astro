@@ -56,7 +56,9 @@ const inactiveNavLinkClass = `${navLinkBaseClass} text-ink-muted hover:text-ink 
       ))}
       <li>
         <button id="theme-toggle" class={`${linkClass} bg-transparent border-0 cursor-pointer font-serif uppercase`}>
-          Light Mode
+          <!-- Both labels are rendered and switched by CSS, so the right one shows before any script runs -->
+          <span class="dark:hidden">Light Mode</span>
+          <span class="hidden dark:inline">Dark Mode</span>
         </button>
       </li>
     </ul>
@@ -78,17 +80,8 @@ const inactiveNavLinkClass = `${navLinkBaseClass} text-ink-muted hover:text-ink 
 <script>
   const themeToggle = document.getElementById('theme-toggle') as HTMLButtonElement;
 
-  const setLabel = () => {
-    const isDark = document.documentElement.classList.contains('dark-mode');
-    themeToggle.textContent = isDark ? 'Dark Mode' : 'Light Mode';
-  };
-
-  setLabel();
-
   themeToggle.addEventListener('click', () => {
-    document.documentElement.classList.toggle('dark-mode');
-    setLabel();
-    const isDark = document.documentElement.classList.contains('dark-mode');
+    const isDark = document.documentElement.classList.toggle('dark-mode');
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
   });
 </script>
