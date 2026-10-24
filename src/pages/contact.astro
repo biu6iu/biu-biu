@@ -35,7 +35,7 @@ const CONTACT: Row[] = [
       <SectionHeading>Contact</SectionHeading>
       <div class="border-t border-ink pt-2">
         <p>I'm always happy to chat about machine learning, projects, photography or anything else.</p>
-        <p class="text-ink-muted" data-local-time data-time-zone={TIME_ZONE} data-city={CITY}>Based in {CITY}.</p>
+        <p class="text-ink-muted text-[15px]" data-local-time data-time-zone={TIME_ZONE} data-city={CITY}>Based in {CITY}.</p>
       </div>
       <div class="mt-6 border-t border-line">
         {CONTACT.map((row) => (
@@ -43,7 +43,7 @@ const CONTACT: Row[] = [
             <p class="mb-0 [overflow-wrap:anywhere]">
               <SectionLink href={row.href} text={row.text} />
             </p>
-            <p class="mt-1 text-ink-muted">{row.detail}</p>
+            <p class="mt-1 text-ink-muted text-[15px]">{row.detail}</p>
           </TimelineRow>
         ))}
       </div>

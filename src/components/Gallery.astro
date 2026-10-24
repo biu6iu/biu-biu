@@ -1,15 +1,27 @@
 ---
 import type { Gallery } from '../data/galleries.ts';
-import CollectionTitle from './CollectionTitle.astro';
 import PhotoStrip from './PhotoStrip.astro';
+import SectionHeading from './SectionHeading.astro';
 
 interface Props {
   gallery: Gallery;
 }
 
 const { gallery } = Astro.props;
+const base = import.meta.env.BASE_URL;
 ---
 
 <PhotoStrip items={gallery.images} label={`${gallery.title} photos`}>
-  <CollectionTitle>{gallery.title}</CollectionTitle>
+  <!-- Same heading and top spacing as the other pages, so the title sits in the same place. The back link shares
+       the title's line (baselines aligned) rather than sitting above it, which would push the title down.
+       The row is inset by the strip's own 12.5cqw padding (PhotoStrip.astro), so the link starts at the
+       photo's left edge; the same inset on the right and the equal side columns keep the title centred. -->
+  <div class="grid grid-cols-[1fr_auto_1fr] items-baseline gap-4 px-[12.5cqw] pt-8">
+    <!-- On phones only the arrow shows, so the title keeps the width it needs -->
+    <a
+      href={`${base}photography`}
+      class="justify-self-start whitespace-nowrap text-ink-soft text-[1rem] no-underline transition-colors duration-200 ease-[ease] hover:text-ink"
+    >← <span class="max-sm:sr-only">Collections</span></a>
+    <SectionHeading>{gallery.title}</SectionHeading>
+  </div>
 </PhotoStrip>

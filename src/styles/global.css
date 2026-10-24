@@ -51,6 +51,9 @@
 @layer base {
   html {
     line-height: normal;
+    /* Thinner strokes on macOS, so EB Garamond reads lighter (other platforms ignore these) */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   /* Cross-fade for the theme toggle only. Nav.astro adds .theme-transition for the
@@ -79,8 +82,10 @@
 
   p {
     font-family: var(--font-serif);
-    font-size: 14px;
+    font-size: 17px;
+    line-height: 1.25;
     margin-block: 1em;
+    color: var(--text-body); /* a softer ink than headings; grey text-ink-* classes still win */
   }
 
   p a {

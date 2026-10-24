@@ -8,4 +8,4 @@ const { href, text } = Astro.props;
 const isExternal = /^https?:\/\//.test(href);
 ---
 
-<a href={href} target={isExternal ? '_blank' : undefined} rel={isExternal ? 'noopener noreferrer' : undefined} class="text-accent no-underline font-medium transition-colors duration-200 ease-[ease] hover:text-accent-hover">{text}</a>
+<a href={href} target={isExternal ? '_blank' : undefined} rel={isExternal ? 'noopener noreferrer' : undefined} class="text-accent no-underline font-normal transition-colors duration-200 ease-[ease] hover:text-accent-hover">{text}</a>
