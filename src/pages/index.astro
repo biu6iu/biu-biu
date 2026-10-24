@@ -21,6 +21,7 @@ const SLIDE_INTERVAL = 2500;
           'transition-opacity duration-1000 ease-[ease-in-out]',
           i === 0 ? 'opacity-100' : 'opacity-0',
         ]}
+        aria-hidden={i === 0 ? undefined : 'true'}
       />
     ))}
   </div>
@@ -34,12 +35,31 @@ const SLIDE_INTERVAL = 2500;
     const interval = Number(slideshow.dataset.interval) || 2500;
     let current = 0;
 
-    if (images.length > 1) {
-      setInterval(() => {
-        images[current].classList.replace('opacity-100', 'opacity-0');
-        current = (current + 1) % images.length;
-        images[current].classList.replace('opacity-0', 'opacity-100');
-      }, interval);
+    let timer: number | undefined;
+
+    const show = (next: number) => {
+      images[current].classList.replace('opacity-100', 'opacity-0');
+      images[current].setAttribute('aria-hidden', 'true');
+      current = next;
+      images[current].classList.replace('opacity-0', 'opacity-100');
+      images[current].removeAttribute('aria-hidden');
+    };
+
+    const start = () => {
+      clearInterval(timer);
+      timer = window.setInterval(() => show((current + 1) % images.length), interval);
+    };
+
+    // Auto-advancing content is motion, so reduced-motion visitors get the first photo only
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (images.length > 1 && !reduceMotion) {
+      start();
+      // Don't keep cycling in a background tab
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) clearInterval(timer);
+        else start();
+      });
     }
   }
 </script>

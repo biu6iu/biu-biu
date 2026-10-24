@@ -23,12 +23,12 @@ function isActive(path: string): boolean {
 
 const linkClass =
   'block p-2.5 max-xs:p-2 text-[13px] max-xs:text-[12px] no-underline text-ink rounded-lg ' +
-  'transition-[color,background-color,transform] duration-300 ease-[ease] hover:text-ink-muted ' +
-  'active:text-ink-muted active:scale-95';
+  'transition-[color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:text-ink-muted ' +
+  'active:text-ink-muted active:scale-[0.97]';
 
 const navLinkBaseClass =
   'block p-2.5 max-xs:p-2 text-[13px] max-xs:text-[12px] no-underline rounded-lg ' +
-  'transition-[color,background-color,transform] duration-300 ease-[ease] active:scale-95';
+  'transition-[color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97]';
 const activeNavLinkClass = `${navLinkBaseClass} text-ink`;
 const inactiveNavLinkClass = `${navLinkBaseClass} text-ink-muted hover:text-ink active:text-ink-muted`;
 ---
@@ -72,16 +72,23 @@ const inactiveNavLinkClass = `${navLinkBaseClass} text-ink-muted hover:text-ink 
     data-key={LASTFM_KEY}
   >
     <p id="now-playing-label" class="text-ink-muted text-[11px] tracking-widest uppercase"></p>
-    <a id="now-playing-track" target="_blank" rel="noopener noreferrer" class="block text-ink text-[15px] no-underline hover:text-ink-muted truncate"></a>
+    <a id="now-playing-track" target="_blank" rel="noopener noreferrer" class="block text-ink text-[15px] no-underline transition-colors duration-200 ease-[ease] hover:text-ink-muted truncate"></a>
     <p id="now-playing-artist" class="text-ink-muted text-[13px] truncate"></p>
   </div>
 </nav>
 
 <script>
   const themeToggle = document.getElementById('theme-toggle') as HTMLButtonElement;
+  const root = document.documentElement;
+  let fadeTimer: number | undefined;
 
   themeToggle.addEventListener('click', () => {
-    const isDark = document.documentElement.classList.toggle('dark-mode');
+    // Fade colours only while the theme is switching (see .theme-transition in global.css)
+    root.classList.add('theme-transition');
+    clearTimeout(fadeTimer);
+    fadeTimer = window.setTimeout(() => root.classList.remove('theme-transition'), 300);
+
+    const isDark = root.classList.toggle('dark-mode');
     try { localStorage.setItem('theme', isDark ? 'dark' : 'light'); } catch (e) {}
   });
 </script>

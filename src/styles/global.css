@@ -51,9 +51,11 @@
     line-height: normal;
   }
 
-  /* Drives the cross-fade when .dark-mode is toggled on */
-  * {
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  /* Cross-fade for the theme toggle only. Nav.astro adds .theme-transition for the
+     duration of the fade, so everyday hovers keep their own timing. */
+  .theme-transition,
+  .theme-transition * {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
   }
 
   p {
@@ -65,6 +67,7 @@
   p a {
     text-decoration: none;
     color: var(--text-muted);
+    transition: color 0.2s ease;
   }
 
   p a:hover {
