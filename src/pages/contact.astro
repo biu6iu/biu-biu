@@ -2,84 +2,65 @@
 import Layout from '../layouts/Layout.astro';
 import SectionHeading from '../components/SectionHeading.astro';
 import SectionLink from '../components/SectionLink.astro';
+import TimelineRow from '../components/TimelineRow.astro';
+
+const base = import.meta.env.BASE_URL;
 
 const EMAIL = 'ajlu0414@gmail.com';
+const GITHUB_USER = 'biu6iu';
+// Where the local time shown on the page is for
+const TIME_ZONE = 'Australia/Melbourne';
+const CITY = 'Melbourne';
 
-const CONTACTS = [
-  { label: 'Email', href: `mailto:${EMAIL}`, text: EMAIL, copy: EMAIL },
-  { label: 'LinkedIn', href: 'https://www.linkedin.com/in/steven-lu-04b603300/', text: 'Steven Lu' },
-  { label: 'GitHub', href: 'https://github.com/biu6iu', text: 'biu6iu' },
-  { label: 'Instagram', href: 'https://www.instagram.com/6iubiu/', text: '@6iubiu' },
+interface Row {
+  label: string;
+  href: string;
+  text: string;
+  /** A line of context under the link */
+  detail: string;
+}
+
+const CONTACT: Row[] = [
+  { label: 'Email', href: `mailto:${EMAIL}`, text: EMAIL, detail: 'The best way to reach me' },
+  { label: 'LinkedIn', href: 'https://www.linkedin.com/in/steven-lu-04b603300/', text: 'Steven Lu', detail: 'My professional persona' },
+  { label: 'GitHub', href: `https://github.com/${GITHUB_USER}`, text: GITHUB_USER, detail: 'Code for my projects' },
+  { label: 'Instagram', href: 'https://www.instagram.com/6iubiu/', text: '@6iubiu', detail: 'Mostly photos' },
 ];
+
 ---
 
 <Layout title="Contact">
-  <!-- Heading in the same column as About/Projects; the details are centred in the space below it -->
-  <div class="flex flex-col min-h-full">
-    <section class="w-full max-w-200 mx-auto px-8 pt-8 box-border">
+  <section class="max-w-200 mx-auto p-8 box-border">
+    <div class="mb-12">
       <SectionHeading>Contact</SectionHeading>
-    </section>
-
-    <div class="flex-1 flex justify-center items-center p-8 max-md:p-4">
-      <!-- Labels right-aligned against left-aligned links; stacks on narrow screens -->
-      <dl
-        class="m-0 grid grid-cols-[auto_auto] gap-x-6 gap-y-4 items-baseline
-               max-sm:grid-cols-1 max-sm:gap-y-1 max-sm:justify-items-center"
-      >
-        {CONTACTS.map((contact) => (
-          <Fragment>
-            <dt class="text-ink-muted text-sm text-right max-sm:text-center max-sm:not-first:mt-4">{contact.label}</dt>
-            <dd class="m-0 text-base [overflow-wrap:anywhere]">
-              <SectionLink href={contact.href} text={contact.text} />
-              {contact.copy && (
-                <button
-                  type="button"
-                  data-copy={contact.copy}
-                  class="copy-button ml-3 inline-grid p-0 border-0 bg-transparent cursor-pointer font-serif text-sm
-                         text-ink-muted hover:text-ink transition-[color,transform] duration-150
-                         ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97]"
-                >
-                  <!-- Both labels share one cell so the button keeps its width when the text swaps -->
-                  <span class="[grid-area:1/1] copy-idle">Copy</span>
-                  <span class="[grid-area:1/1] copy-done invisible">Copied</span>
-                </button>
-              )}
-            </dd>
-          </Fragment>
+      <div class="border-t border-ink pt-2">
+        <p>I'm always happy to chat about machine learning, projects, photography or anything else.</p>
+        <p class="text-ink-muted" data-local-time data-time-zone={TIME_ZONE} data-city={CITY}>Based in {CITY}.</p>
+      </div>
+      <div class="mt-6 border-t border-line">
+        {CONTACT.map((row) => (
+          <TimelineRow date={row.label}>
+            <p class="mb-0 [overflow-wrap:anywhere]">
+              <SectionLink href={row.href} text={row.text} />
+            </p>
+            <p class="mt-1 text-ink-muted">{row.detail}</p>
+          </TimelineRow>
         ))}
-      </dl>
-      <span id="copy-status" class="sr-only" aria-live="polite"></span>
+      </div>
     </div>
-  </div>
+
+    <p class="text-ink-muted">Or see what I've been photographing on the <SectionLink href={`${base}photography`} text="photography page" /></p>
+  </section>
 </Layout>
 
 <script>
-  const status = document.getElementById('copy-status');
-
-  document.querySelectorAll<HTMLButtonElement>('.copy-button').forEach((button) => {
-    const idle = button.querySelector('.copy-idle');
-    const done = button.querySelector('.copy-done');
-    let resetTimer: number | undefined;
-
-    button.addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(button.dataset.copy ?? '');
-      } catch (err) {
-        // Clipboard needs a secure context and permission; the mailto link still works
-        console.error('[Contact] copy failed:', err);
-        return;
-      }
-
-      idle?.classList.add('invisible');
-      done?.classList.remove('invisible');
-      if (status) status.textContent = 'Email address copied';
-
-      clearTimeout(resetTimer);
-      resetTimer = window.setTimeout(() => {
-        idle?.classList.remove('invisible');
-        done?.classList.add('invisible');
-        if (status) status.textContent = '';
-      }, 1500);
-    });
-  });
+  // Local time, so it's clear when a reply might come
+  const localTime = document.querySelector<HTMLElement>('[data-local-time]');
+  if (localTime) {
+    const { timeZone, city } = localTime.dataset;
+    const clock = new Intl.DateTimeFormat('en-AU', { timeZone, hour: 'numeric', minute: '2-digit' });
+    const tick = () => (localTime.textContent = `Based in ${city}, where it's ${clock.format(new Date())}.`);
+    tick();
+    setInterval(tick, 30_000);
+  }
 </script>
