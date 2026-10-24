@@ -66,7 +66,7 @@ const inactiveNavLinkClass = `${navLinkBaseClass} text-ink-muted hover:text-ink 
   </button>
 
   <h1 class="nav-content md:nav-collapsed:hidden mt-5 text-[24px] max-md:text-[20px] font-normal">
-    <a id="wordmark" href={base} class="text-center no-underline text-ink">STEVEN LU</a>
+    <a href={base} class="text-center no-underline text-ink">STEVEN LU</a>
   </h1>
 
   <div class="nav-content md:nav-collapsed:hidden flex-1 flex flex-col justify-center items-center max-md:my-2.5">
@@ -105,9 +105,6 @@ const inactiveNavLinkClass = `${navLinkBaseClass} text-ink-muted hover:text-ink 
 </nav>
 
 <script>
-  import { outlineOf, fourierSeries, epicycles } from '../lib/fourier.ts';
-  import { WORDMARK_TIMING, WORDMARK_START_KEY } from '../lib/wordmark-timing.ts';
-
   const themeToggle = document.getElementById('theme-toggle') as HTMLButtonElement;
   const root = document.documentElement;
   let fadeTimer: number | undefined;
@@ -173,160 +170,6 @@ const inactiveNavLinkClass = `${navLinkBaseClass} text-ink-muted hover:text-ink 
     navToggle.setAttribute('aria-label', isClosing ? 'Hide navigation' : 'Show navigation');
     try { localStorage.setItem('nav', isClosing ? 'open' : 'collapsed'); } catch (e) {}
   });
-
-  // The STEVEN LU wordmark, drawn by Fourier epicycles (src/lib/fourier.ts) on a loop: draw the name, hold
-  // it, run the circles backwards to un-draw it, pause on nothing, repeat. The loop is timed from the
-  // session's first page (src/lib/wordmark-timing.ts), and every frame is drawn from that clock, so a new
-  // page picks up exactly where the last one was. Layout's head script hides the text before first paint
-  // whenever the loop isn't in its hold.
-  const { draw: DRAW_MS, hold: HOLD_MS, gap: GAP_MS } = WORDMARK_TIMING;
-  const CYCLE_MS = 2 * DRAW_MS + HOLD_MS + GAP_MS;
-  // The traced outline fades out as the real text fades in (matches the text's colour transition)
-  const HANDOVER_MS = 600;
-  // Points along the letter outlines, and so the number of circles
-  const SAMPLES = 700;
-  // Only the largest circles are drawn; the rest are too small to see but still move the pen
-  const CIRCLES_DRAWN = 40;
-  const SMALLEST_CIRCLE = 1.5; // radius in px; smaller ones pile up into a smudge at the pen
-  // Room around the name for the circles
-  const MARGIN = 48;
-
-  const wordmark = document.getElementById('wordmark')!;
-
-  /** Trace the wordmark's outline and take its Fourier series */
-  const prepare = async () => {
-    await document.fonts.ready; // trace the real font, not a fallback
-    const style = getComputedStyle(wordmark);
-    const outline = outlineOf(wordmark.textContent!.trim(), `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`, SAMPLES);
-    const terms = fourierSeries(outline.points);
-    // The constant term is just the outline's centre; start the chain there rather than drawing a line to it
-    const [centre] = terms.splice(terms.findIndex((term) => term.frequency === 0), 1);
-    terms.unshift(centre);
-
-    // Where the pen is at each sample point, worked out once as it's first needed
-    const n = outline.points.length;
-    const tips: { x: number; y: number }[] = [];
-    const tipAt = (i: number) => {
-      while (tips.length <= i) {
-        const chain = epicycles(terms, tips.length / n);
-        tips.push(chain[chain.length - 1]);
-      }
-      return tips[i];
-    };
-    return { outline, terms, n, tipAt };
-  };
-
-  const animateWordmark = async () => {
-    // From here this script controls when the text shows, so stop the head script's fallback un-hiding it
-    clearTimeout((window as Window & { wordmarkSafety?: number }).wordmarkSafety);
-
-    let start = Date.now();
-    try {
-      start = Number(sessionStorage.getItem(WORDMARK_START_KEY)) || start;
-    } catch (e) {}
-
-    const { outline, terms, n, tipAt } = await prepare();
-
-    const width = outline.width + MARGIN * 2;
-    const height = outline.height + MARGIN * 2;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const canvas = document.createElement('canvas');
-    canvas.setAttribute('aria-hidden', 'true');
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
-    Object.assign(canvas.style, { position: 'fixed', width: `${width}px`, height: `${height}px`, pointerEvents: 'none', zIndex: '10' });
-    document.body.append(canvas);
-    const ctx = canvas.getContext('2d')!;
-    ctx.scale(dpr, dpr);
-    ctx.translate(MARGIN, MARGIN);
-
-    const setTextShown = (shown: boolean) => root.classList.toggle('wordmark-pending', !shown);
-
-    /** The outline up to sample `reached`, lifting the pen between letters */
-    const traceOutline = (reached: number, ink: string, alpha = 1) => {
-      ctx.strokeStyle = ink;
-      ctx.globalAlpha = alpha;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      for (let i = 0; i < reached; i++) {
-        if (outline.penUp[i]) continue;
-        const a = tipAt(i);
-        const b = tipAt(i + 1);
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
-      }
-      ctx.stroke();
-      ctx.globalAlpha = 1;
-    };
-
-    /** The circles with the pen at sample `reached`, largest first, each centred on the previous one's tip */
-    const drawCircles = (reached: number, muted: string) => {
-      const chain = epicycles(terms, reached / n);
-      ctx.strokeStyle = muted;
-      ctx.lineWidth = 0.5;
-      ctx.globalAlpha = 0.6;
-      ctx.beginPath();
-      for (let i = 1; i < Math.min(CIRCLES_DRAWN, terms.length); i++) {
-        const r = terms[i].amplitude;
-        if (r < SMALLEST_CIRCLE) break;
-        ctx.moveTo(chain[i].x + r, chain[i].y);
-        ctx.arc(chain[i].x, chain[i].y, r, 0, 2 * Math.PI);
-        ctx.moveTo(chain[i].x, chain[i].y);
-        ctx.lineTo(chain[i + 1].x, chain[i + 1].y);
-      }
-      ctx.stroke();
-      ctx.globalAlpha = 1;
-    };
-
-    const frame = () => {
-      requestAnimationFrame(frame);
-      ctx.clearRect(-MARGIN, -MARGIN, width, height);
-
-      // offsetParent is null while the nav is collapsed: nothing to draw, and the name shows when it reopens
-      if (!wordmark.offsetParent) return setTextShown(true);
-
-      // Follow the wordmark if the window changes, and pick up a theme switch
-      const box = wordmark.getBoundingClientRect();
-      canvas.style.left = `${box.left - MARGIN}px`;
-      canvas.style.top = `${box.top + outline.top - MARGIN}px`;
-      const tokens = getComputedStyle(root);
-      const ink = tokens.getPropertyValue('--text-primary').trim() || '#000';
-      const muted = tokens.getPropertyValue('--text-muted').trim() || '#707070';
-
-      const at = (Date.now() - start) % CYCLE_MS;
-      const pen = (progress: number) => Math.min(n - 1, Math.floor(progress * n));
-
-      if (at < DRAW_MS) {
-        // Drawing
-        setTextShown(false);
-        const reached = pen(at / DRAW_MS);
-        traceOutline(reached, ink);
-        drawCircles(reached, muted);
-      } else if (at < DRAW_MS + HOLD_MS) {
-        // Holding: the real text fades in as the traced outline fades out
-        setTextShown(true);
-        const fade = 1 - (at - DRAW_MS) / HANDOVER_MS;
-        if (fade > 0) traceOutline(n - 1, ink, fade);
-      } else if (at < 2 * DRAW_MS + HOLD_MS) {
-        // Un-drawing: the same path backwards, so the pen retreats and the outline shortens behind it
-        setTextShown(false);
-        const reached = pen(1 - (at - DRAW_MS - HOLD_MS) / DRAW_MS);
-        traceOutline(reached, ink);
-        drawCircles(reached, muted);
-      } else {
-        // The pause on nothing before drawing again
-        setTextShown(false);
-      }
-    };
-    requestAnimationFrame(frame);
-  };
-
-  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    animateWordmark().catch((err) => {
-      console.error('[Nav] wordmark drawing failed:', err);
-      root.classList.remove('wordmark-pending');
-    });
-  }
 </script>
 
 <!-- Inline so a cached track renders during parsing, before first paint (no flash on navigation). -->

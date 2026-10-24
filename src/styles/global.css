@@ -122,12 +122,3 @@
     transform: none;
   }
 }
-
-/* Nav wordmark while its Fourier drawing plays (Nav.astro). Unlayered so it beats text-ink. */
-#wordmark {
-  transition: color 600ms ease;
-}
-
-.wordmark-pending #wordmark {
-  color: transparent;
-}
