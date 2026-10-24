@@ -7,7 +7,7 @@
   --bg-secondary: #ffffff;
   --text-primary: #000000;
   --text-secondary: #666666;
-  --text-muted: #919191;
+  --text-muted: #707070;
   --text-body: #444444;
   --accent: #000000;
   --accent-hover: #666666;
@@ -20,7 +20,7 @@
   --bg-secondary: #1a1a1a;
   --text-primary: #e0e0e0;
   --text-secondary: #a0a0a0;
-  --text-muted: #777777;
+  --text-muted: #808080;
   --text-body: #bbbbbb;
   --accent: #e0e0e0;
   --accent-hover: #a0a0a0;
@@ -41,7 +41,7 @@
   --color-accent-hover: var(--accent-hover);
   --color-line: var(--border);
 
-  --font-serif: "Garamond", serif;
+  --font-serif: "EB Garamond", "Garamond", serif;
 
   --breakpoint-xs: 30rem;
 }
@@ -57,7 +57,7 @@
   }
 
   p {
-    font-family: "Garamond", serif;
+    font-family: var(--font-serif);
     font-size: 14px;
     margin-block: 1em;
   }

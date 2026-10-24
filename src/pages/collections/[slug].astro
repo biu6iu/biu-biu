@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import Gallery from '../../components/Gallery.astro';
 import { GALLERIES } from '../../data/galleries.ts';
+import { COLLECTIONS } from '../../data/collections.ts';
 
 export function getStaticPaths() {
   return GALLERIES.map((gallery) => ({
@@ -12,13 +13,19 @@ export function getStaticPaths() {
 
 const { gallery } = Astro.props;
 
-const pageTitle = gallery.slug
+const collection = COLLECTIONS.find((c) => c.path.replace(/\.html$/, '') === gallery.slug);
+
+const pageTitle = collection?.title ?? gallery.slug
   .split('_')
   .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
   .join(' ');
 ---
 
-<Layout title={pageTitle}>
+<Layout
+  title={pageTitle}
+  description={`${pageTitle}: a photography collection by Steven Lu.`}
+  image={gallery.images[0]?.src}
+>
   <div class="flex flex-col items-center gap-5 w-full">
     <Gallery gallery={gallery} />
   </div>

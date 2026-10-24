@@ -82,7 +82,7 @@ const inactiveNavLinkClass = `${navLinkBaseClass} text-ink-muted hover:text-ink 
 
   themeToggle.addEventListener('click', () => {
     const isDark = document.documentElement.classList.toggle('dark-mode');
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    try { localStorage.setItem('theme', isDark ? 'dark' : 'light'); } catch (e) {}
   });
 </script>
 
