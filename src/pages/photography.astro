@@ -22,5 +22,10 @@ const covers = COLLECTIONS.map((collection) => ({
     <section class="max-w-200 mx-auto px-8 pt-8 box-border">
       <SectionHeading>Collections</SectionHeading>
     </section>
+
+    <!-- Desktop only, and gone once the nav is collapsed since there's nothing left to suggest -->
+    <p slot="after" class="max-md:hidden md:nav-collapsed:hidden m-0 mt-6 text-center text-sm text-ink-muted">
+      Tip: hide the sidebar with the arrow on its edge for a bigger view.
+    </p>
   </PhotoStrip>
 </Layout>

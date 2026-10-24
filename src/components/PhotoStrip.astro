@@ -31,6 +31,12 @@ const controlClass =
 
 const itemClass = 'block shrink-0 w-auto snap-center opacity-(--fade) cursor-pointer data-current:cursor-default';
 
+// Links stay clickable while centred, so they keep the pointer and grow slightly on hover to show it.
+// Only scale transitions: opacity is repainted every scroll frame and would lag behind if eased.
+const linkClass =
+  'block shrink-0 w-auto snap-center opacity-(--fade) cursor-pointer hover:scale-[1.02] ' +
+  'transition-[scale] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]';
+
 // Same size rule as the home page slideshow (index.astro): at most 75% of the main area wide and 75% of
 // the screen tall. cqw is a percentage of the strip, which spans the main area like the slideshow does.
 const itemStyle = (item: StripItem, i: number) =>
@@ -66,7 +72,7 @@ const itemStyle = (item: StripItem, i: number) =>
           data-caption={item.caption}
           data-reveal
           data-current={current}
-          class={itemClass}
+          class={linkClass}
           style={itemStyle(item, i)}
         >
           <img src={item.src} alt={item.alt} width={item.width} height={item.height} loading={loading} class="block w-full h-full" />
@@ -107,6 +113,8 @@ const itemStyle = (item: StripItem, i: number) =>
         </svg>
       </button>
     </div>
+
+    <slot name="after" />
   </div>
 </div>
 
