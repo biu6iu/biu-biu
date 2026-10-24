@@ -22,9 +22,10 @@ const {
 
 const fullTitle = title ? `${title} · ${SITE_NAME}` : SITE_NAME;
 const base = import.meta.env.BASE_URL;
+const year = new Date().getFullYear();
 const canonical = new URL(Astro.url.pathname, Astro.site);
 
-const mainClass = 'flex-1 overflow-y-auto h-dvh max-md:h-auto max-md:min-h-0 box-border p-5';
+const mainClass = 'flex-1 flex flex-col overflow-y-auto h-dvh max-md:h-auto max-md:min-h-0 box-border p-5';
 ---
 
 <!DOCTYPE html>
@@ -62,7 +63,11 @@ const mainClass = 'flex-1 overflow-y-auto h-dvh max-md:h-auto max-md:min-h-0 box
     <div class="flex max-md:flex-col w-full min-h-dvh max-md:h-auto overflow-hidden">
       <Nav />
       <main class={mainClass}>
-        <slot />
+        <!-- Grows to fill the main area, so pages sized with h-full still fill it and the footer stays at the bottom -->
+        <div class="flex-[1_0_auto]">
+          <slot />
+        </div>
+        <footer class="shrink-0 pt-4 text-center text-xs text-ink-muted">&copy; {year} {SITE_NAME}</footer>
       </main>
     </div>
 
