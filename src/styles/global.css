@@ -29,6 +29,8 @@
 
 
 @custom-variant dark (&:where(.dark-mode, .dark-mode *));
+@custom-variant nav-collapsed (&:where(.nav-collapsed, .nav-collapsed *));
+@custom-variant nav-collapsing (&:where(.nav-collapsing, .nav-collapsing *));
 
 @theme inline {
   --color-page: var(--bg-primary);
@@ -49,6 +51,9 @@
 @layer base {
   html {
     line-height: normal;
+    /* Thinner strokes on macOS, so EB Garamond reads lighter (other platforms ignore these) */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   /* Cross-fade for the theme toggle only. Nav.astro adds .theme-transition for the
@@ -58,10 +63,29 @@
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
   }
 
+  /* Opening the collapsed nav. Only runs while .nav-revealing is set, never on page load */
+  .nav-revealing .nav-content {
+    animation: nav-reveal 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav-revealing .nav-content {
+      animation-name: nav-fade;
+    }
+  }
+
+  /* Closing the nav: contents fade out while the sidebar narrows (Nav.astro), a touch slower than opening */
+  .nav-collapsing .nav-content {
+    white-space: nowrap; /* don't rewrap the links as the sidebar narrows */
+    animation: nav-conceal 200ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  }
+
   p {
     font-family: var(--font-serif);
-    font-size: 14px;
+    font-size: 17px;
+    line-height: 1.25;
     margin-block: 1em;
+    color: var(--text-body); /* a softer ink than headings; grey text-ink-* classes still win */
   }
 
   p a {
@@ -72,5 +96,34 @@
 
   p a:hover {
     color: var(--text-primary);
+  }
+}
+
+@keyframes nav-reveal {
+  from { opacity: 0; transform: translateX(-8px); }
+}
+
+@keyframes nav-fade {
+  from { opacity: 0; }
+}
+
+@keyframes nav-conceal {
+  to { opacity: 0; transform: translateX(-8px); }
+}
+
+/* Scroll reveal (Layout.astro). Unlayered so it beats components' own transition utilities
+   while it runs; .reveal-in is removed afterwards, handing those transitions back. */
+.reveal-pending {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.reveal-in {
+  transition: opacity 500ms cubic-bezier(0.23, 1, 0.32, 1), transform 500ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-pending {
+    transform: none;
   }
 }

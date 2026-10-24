@@ -1,65 +1,253 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { COLLECTIONS } from '../data/collections.ts';
-
-
-const SLIDE_INTERVAL = 2500;
 ---
 
 <Layout>
-  <div
-    id="photo-slideshow"
-    class="relative w-full h-full flex justify-center items-center overflow-hidden"
-    data-interval={SLIDE_INTERVAL}
-  >
-    {COLLECTIONS.map((collection, i) => (
-      <img
-        src={collection.coverImage}
-        alt={collection.title}
-        class:list={[
-          'absolute max-w-[90%] max-h-[90vh] object-contain',
-          'transition-opacity duration-1000 ease-[ease-in-out]',
-          i === 0 ? 'opacity-100' : 'opacity-0',
-        ]}
-        aria-hidden={i === 0 ? undefined : 'true'}
-      />
-    ))}
+  <!-- Graham scan drawn in ASCII on a loop (src/lib/graham.ts): random points, then their convex hull -->
+  <div id="hull" class="w-full h-full flex flex-col justify-center items-center gap-4">
+    <canvas
+      id="hull-canvas"
+      role="img"
+      aria-label="An animation of the Graham scan algorithm finding the convex hull of random points, drawn in ASCII characters"
+      class="transition-opacity duration-500"
+    ></canvas>
+    <p id="hull-caption" aria-hidden="true" class="m-0 font-serif text-ink-muted text-[11px] tracking-widest uppercase tabular-nums"></p>
   </div>
 </Layout>
 
 <script>
-  const slideshow = document.getElementById('photo-slideshow');
+  import { grahamScan, randomPoints, type Point } from '../lib/graham.ts';
 
-  if (slideshow) {
-    const images = Array.from(slideshow.getElementsByTagName('img'));
-    const interval = Number(slideshow.dataset.interval) || 2500;
-    let current = 0;
+  // The grid is GRID × GRID cells, each two characters wide so a cell comes out roughly square
+  const GRID = 50;
+  const MIN_POINTS = 10;
+  const MAX_POINTS = 30;
+  const MONO_FONT = 'ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace';
 
-    let timer: number | undefined;
+  // Milliseconds for each beat of the animation
+  const TIMING = {
+    spawn: 40, // between points appearing
+    pivot: 600,
+    sweep: 80, // per point as the ray sweeps round them in angle order
+    check: 170,
+    pop: 200,
+    push: 120,
+    done: 3000, // the finished hull, before it fades
+    fade: 500,
+  };
 
-    const show = (next: number) => {
-      images[current].classList.replace('opacity-100', 'opacity-0');
-      images[current].setAttribute('aria-hidden', 'true');
-      current = next;
-      images[current].classList.replace('opacity-0', 'opacity-100');
-      images[current].removeAttribute('aria-hidden');
-    };
+  const container = document.getElementById('hull')!;
+  const canvas = document.getElementById('hull-canvas') as HTMLCanvasElement;
+  const caption = document.getElementById('hull-caption')!;
+  const ctx = canvas.getContext('2d')!;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    const start = () => {
-      clearInterval(timer);
-      timer = window.setInterval(() => show((current + 1) % images.length), interval);
-    };
-
-    // Auto-advancing content is motion, so reduced-motion visitors get the first photo only
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    if (images.length > 1 && !reduceMotion) {
-      start();
-      // Don't keep cycling in a background tab
-      document.addEventListener('visibilitychange', () => {
-        if (document.hidden) clearInterval(timer);
-        else start();
-      });
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+  // Waits that don't count time spent in a background tab
+  const visibleSleep = async (ms: number) => {
+    await sleep(ms);
+    while (document.hidden) {
+      await new Promise((resolve) => document.addEventListener('visibilitychange', resolve, { once: true }));
     }
+  };
+
+  // ---- What's on screen ----
+
+  type Tone = 'faint' | 'muted' | 'ink';
+  interface Scene {
+    points: Point[];
+    pivot: Point | null;
+    ray: Point | null; // the sweep, from the pivot
+    candidate: [Point, Point] | null; // the edge being tested
+    stack: Point[]; // consecutive stack points are joined by solid edges
+    hull: Point[] | null; // set once finished
   }
+  const emptyScene = (): Scene => ({ points: [], pivot: null, ray: null, candidate: null, stack: [], hull: null });
+  let scene = emptyScene();
+
+  // ---- Layout: the biggest character size that fits (75% of the screen tall, 90% of the area wide) ----
+
+  let glyphWidth = 0;
+  let lineHeight = 0;
+  const fit = () => {
+    const probe = document.createElement('canvas').getContext('2d')!;
+    probe.font = `100px ${MONO_FONT}`;
+    const aspect = probe.measureText('M').width / 100;
+
+    const columns = GRID * 2;
+    const fontSize = Math.min((window.innerHeight * 0.75) / GRID, (container.clientWidth * 0.9) / (columns * aspect));
+    glyphWidth = fontSize * aspect;
+    lineHeight = fontSize;
+
+    const width = columns * glyphWidth;
+    const height = GRID * lineHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.font = `${fontSize}px ${MONO_FONT}`;
+    ctx.textBaseline = 'top';
+  };
+
+  // ---- Drawing ----
+
+  /** The character grid: GRID rows of GRID * 2 columns. Row 0 is the top, so y (which points up) is flipped. */
+  const blankGrid = () =>
+    Array.from({ length: GRID }, () =>
+      Array.from({ length: GRID * 2 }, (_, col) => ({ ch: col % 2 === 0 ? '·' : ' ', tone: 'faint' as Tone })),
+    );
+  type Grid = ReturnType<typeof blankGrid>;
+
+  const put = (grid: Grid, p: Point, ch: string, tone: Tone, slot = 0) => {
+    grid[GRID - 1 - p.y][p.x * 2 + slot] = { ch, tone };
+  };
+
+  /** A line from a to b (ends excluded) with Bresenham's algorithm, drawn in - | / \ by its slope */
+  const line = (grid: Grid, a: Point, b: Point, tone: Tone) => {
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const angle = Math.atan2(Math.abs(dy), Math.abs(dx));
+    const ch = angle < Math.PI / 8 ? '-' : angle > (3 * Math.PI) / 8 ? '|' : dx * dy > 0 ? '/' : '\\';
+
+    const adx = Math.abs(dx);
+    const ady = Math.abs(dy);
+    const sx = Math.sign(dx);
+    const sy = Math.sign(dy);
+    let x = a.x;
+    let y = a.y;
+    let error = adx - ady;
+    while (true) {
+      const e2 = 2 * error;
+      if (e2 > -ady) { error -= ady; x += sx; }
+      if (e2 < adx) { error += adx; y += sy; }
+      if (x === b.x && y === b.y) break;
+      put(grid, { x, y }, ch, tone);
+      if (ch === '-') put(grid, { x, y }, '-', tone, 1); // join horizontal runs across the two-character cell
+    }
+  };
+
+  const render = () => {
+    const grid = blankGrid();
+
+    if (scene.ray && scene.pivot) line(grid, scene.pivot, scene.ray, 'muted');
+    if (scene.candidate) line(grid, scene.candidate[0], scene.candidate[1], 'muted');
+    const path = scene.hull ? [...scene.hull, scene.hull[0]] : scene.stack;
+    for (let i = 0; i + 1 < path.length; i++) line(grid, path[i], path[i + 1], 'ink');
+
+    const onHull = new Set(scene.hull ?? scene.stack);
+    for (const p of scene.points) {
+      if (p === scene.pivot) put(grid, p, '@', 'ink');
+      else if (onHull.has(p)) put(grid, p, 'O', 'ink');
+      else put(grid, p, 'o', scene.hull ? 'muted' : 'ink'); // inside the finished hull, they recede
+    }
+
+    const tokens = getComputedStyle(document.documentElement);
+    const colours: Record<Tone, string> = {
+      ink: tokens.getPropertyValue('--text-primary').trim() || '#000',
+      muted: tokens.getPropertyValue('--text-muted').trim() || '#707070',
+      faint: tokens.getPropertyValue('--border').trim() || '#e0e0e0',
+    };
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    grid.forEach((row, r) =>
+      row.forEach((cell, c) => {
+        if (cell.ch === ' ') return;
+        ctx.fillStyle = colours[cell.tone];
+        ctx.fillText(cell.ch, c * glyphWidth, r * lineHeight);
+      }),
+    );
+  };
+
+  // ---- One run of the algorithm ----
+
+  const run = async (animate: boolean) => {
+    const count = MIN_POINTS + Math.floor(Math.random() * (MAX_POINTS - MIN_POINTS + 1));
+    const points = randomPoints(count, GRID);
+    const { pivot, sorted, steps, hull } = grahamScan(points);
+    scene = emptyScene();
+
+    if (!animate) {
+      scene = { ...scene, points, pivot, hull };
+      caption.textContent = `Convex hull · ${hull.length} of ${count} points`;
+      render();
+      return;
+    }
+
+    caption.textContent = `Graham scan · ${count} points`;
+    for (const p of points) {
+      scene.points.push(p);
+      render();
+      await visibleSleep(TIMING.spawn);
+    }
+
+    scene.pivot = pivot;
+    caption.textContent = 'Pivot · the lowest point';
+    render();
+    await visibleSleep(TIMING.pivot);
+
+    caption.textContent = 'Sorting by polar angle';
+    for (const p of sorted) {
+      scene.ray = p;
+      render();
+      await visibleSleep(TIMING.sweep);
+    }
+    scene.ray = null;
+
+    scene.stack = [pivot];
+    for (const step of steps) {
+      if (step.kind === 'check') {
+        scene.candidate = [step.from, step.to];
+        caption.textContent = `Scanning · stack of ${scene.stack.length}`;
+        render();
+        await visibleSleep(TIMING.check);
+      } else if (step.kind === 'pop') {
+        // A right turn: the last edge comes off the stack
+        scene.stack.pop();
+        scene.candidate = null;
+        caption.textContent = 'Right turn · pop';
+        render();
+        await visibleSleep(TIMING.pop);
+      } else {
+        scene.stack.push(step.point);
+        scene.candidate = null;
+        render();
+        await visibleSleep(TIMING.push);
+      }
+    }
+
+    scene.hull = hull;
+    caption.textContent = `Convex hull · ${hull.length} of ${count} points`;
+    render();
+    await visibleSleep(TIMING.done);
+  };
+
+  fit();
+  window.addEventListener('resize', () => {
+    fit();
+    render();
+  });
+  // Redraw in the new colours when the theme changes (other classes on <html> change too, so check)
+  let wasDark = document.documentElement.classList.contains('dark-mode');
+  new MutationObserver(() => {
+    const dark = document.documentElement.classList.contains('dark-mode');
+    if (dark === wasDark) return;
+    wasDark = dark;
+    render();
+  }).observe(document.documentElement, { attributeFilter: ['class'] });
+
+  const loop = async () => {
+    // Reduced motion: one finished hull, no animation
+    if (reduceMotion) return run(false);
+    while (true) {
+      await run(true);
+      canvas.classList.add('opacity-0');
+      await visibleSleep(TIMING.fade);
+      scene = emptyScene();
+      render();
+      canvas.classList.remove('opacity-0');
+    }
+  };
+  loop();
 </script>

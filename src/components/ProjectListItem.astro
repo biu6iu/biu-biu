@@ -10,13 +10,14 @@ const base = import.meta.env.BASE_URL;
 ---
 
 <li
+  data-reveal
   class="border-b border-line transition-opacity duration-300 ease-[ease]
          [@media(hover:hover)]:group-has-[a:hover]/list:opacity-40 hover:opacity-100! has-focus-visible:opacity-100!"
 >
   <a href={`${base}projects/${project.slug}`} class="block no-underline py-3">
     <div>
       <h3 class="text-base font-medium text-ink">{project.title}</h3>
-      <p class="text-ink-muted text-sm mt-1">{project.summary}</p>
+      <p class="text-ink-muted text-[15px] mt-1">{project.summary}</p>
     </div>
   </a>
 </li>

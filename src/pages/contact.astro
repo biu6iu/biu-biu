@@ -1,16 +1,66 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import SectionHeading from '../components/SectionHeading.astro';
+import SectionLink from '../components/SectionLink.astro';
+import TimelineRow from '../components/TimelineRow.astro';
+
+const base = import.meta.env.BASE_URL;
+
+const EMAIL = 'ajlu0414@gmail.com';
+const GITHUB_USER = 'biu6iu';
+// Where the local time shown on the page is for
+const TIME_ZONE = 'Australia/Melbourne';
+const CITY = 'Melbourne';
+
+interface Row {
+  label: string;
+  href: string;
+  text: string;
+  /** A line of context under the link */
+  detail: string;
+}
+
+const CONTACT: Row[] = [
+  { label: 'Email', href: `mailto:${EMAIL}`, text: EMAIL, detail: 'The best way to reach me' },
+  { label: 'LinkedIn', href: 'https://www.linkedin.com/in/steven-lu-04b603300/', text: 'Steven Lu', detail: 'My professional persona' },
+  { label: 'GitHub', href: `https://github.com/${GITHUB_USER}`, text: GITHUB_USER, detail: 'Code for my projects' },
+  { label: 'Instagram', href: 'https://www.instagram.com/6iubiu/', text: '@6iubiu', detail: 'Mostly photos' },
+];
+
 ---
 
-<Layout title="Contact" center>
-  <section class="max-w-150 mx-auto p-8 max-md:p-4 max-md:w-[90%]">
+<Layout title="Contact">
+  <section class="max-w-200 mx-auto p-8 box-border">
     <div class="mb-12">
-      <SectionHeading>CONTACT INFO</SectionHeading>
-      <p>Email: <a href="mailto:ajlu0414@gmail.com">ajlu0414@gmail.com</a></p>
-      <p>LinkedIn: <a href="https://www.linkedin.com/in/steven-lu-04b603300/" target="_blank" rel="noopener noreferrer">Steven Lu</a></p>
-      <p>GitHub: <a href="https://github.com/biu6iu" target="_blank" rel="noopener noreferrer">biu6iu</a></p>
-      <p>Instagram: <a href="https://www.instagram.com/6iubiu/" target="_blank" rel="noopener noreferrer">@6iubiu</a></p>
+      <SectionHeading>Contact</SectionHeading>
+      <div class="border-t border-ink pt-2">
+        <p>I'm always happy to chat about machine learning, projects, photography or anything else.</p>
+        <p class="text-ink-muted text-[15px]" data-local-time data-time-zone={TIME_ZONE} data-city={CITY}>Based in {CITY}.</p>
+      </div>
+      <div class="mt-6 border-t border-line">
+        {CONTACT.map((row) => (
+          <TimelineRow date={row.label}>
+            <p class="mb-0 [overflow-wrap:anywhere]">
+              <SectionLink href={row.href} text={row.text} />
+            </p>
+            <p class="mt-1 text-ink-muted text-[15px]">{row.detail}</p>
+          </TimelineRow>
+        ))}
+      </div>
     </div>
+
+    <p class="text-ink-muted">Or see what I've been photographing on the <SectionLink href={`${base}photography`} text="photography page" /></p>
   </section>
 </Layout>
+
+<script>
+  // Local time, so it's clear when a reply might come
+  const localTime = document.querySelector<HTMLElement>('[data-local-time]');
+  if (localTime) {
+    const { timeZone, city } = localTime.dataset;
+    const clock = new Intl.DateTimeFormat('en-AU', { timeZone, hour: 'numeric', minute: '2-digit' });
+    const tick = () => (localTime.textContent = `Based in ${city}, where it's ${clock.format(new Date())}.`);
+    tick();
+    setInterval(tick, 30_000);
+  }
+</script>
