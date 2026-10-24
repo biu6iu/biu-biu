@@ -3,6 +3,7 @@ import Nav from '../components/Nav.astro';
 import '../styles/global.css';
 
 import { COLLECTIONS } from '../data/collections.ts';
+import { WORDMARK_TIMING, WORDMARK_START_KEY } from '../lib/wordmark-timing.ts';
 
 interface Props {
   /** Page name; " · Steven Lu" is appended. Omit on the home page. */
@@ -46,7 +47,7 @@ const mainClass = 'flex-1 overflow-y-auto h-dvh max-md:h-auto max-md:min-h-0 box
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&display=swap" />
-    <script is:inline>
+    <script is:inline define:vars={{ wordmarkTiming: WORDMARK_TIMING, wordmarkStartKey: WORDMARK_START_KEY }}>
       // localStorage can throw when site data is blocked
       try {
         if (localStorage.getItem('theme') === 'dark') {
@@ -54,6 +55,23 @@ const mainClass = 'flex-1 overflow-y-auto h-dvh max-md:h-auto max-md:min-h-0 box
         }
         if (localStorage.getItem('nav') === 'collapsed') {
           document.documentElement.classList.add('nav-collapsed');
+        }
+        // The nav wordmark loops through drawing, holding, un-drawing and a pause (Nav.astro), timed from
+        // the session's first page so it carries on across pages. Work out where the loop is now and hide
+        // the text unless it's in the hold. The timeout makes sure the text can never stay hidden if the
+        // animation script fails; the script cancels it once it has taken over.
+        if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          var start = Number(sessionStorage.getItem(wordmarkStartKey));
+          if (!start) {
+            start = Date.now();
+            sessionStorage.setItem(wordmarkStartKey, String(start));
+          }
+          var t = wordmarkTiming;
+          var at = (Date.now() - start) % (2 * t.draw + t.hold + t.gap);
+          if (at < t.draw || at >= t.draw + t.hold) {
+            document.documentElement.classList.add('wordmark-pending');
+            window.wordmarkSafety = setTimeout(() => document.documentElement.classList.remove('wordmark-pending'), 8000);
+          }
         }
       } catch (e) {}
     </script>
