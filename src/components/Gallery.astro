@@ -1,6 +1,7 @@
 ---
 import type { Gallery } from '../data/galleries.ts';
 import CollectionTitle from './CollectionTitle.astro';
+import PhotoStrip from './PhotoStrip.astro';
 
 interface Props {
   gallery: Gallery;
@@ -9,12 +10,6 @@ interface Props {
 const { gallery } = Astro.props;
 ---
 
-<CollectionTitle>{gallery.title}</CollectionTitle>
-{gallery.images.map((image) => (
-  <img
-    src={image.src}
-    alt={image.alt}
-    loading="lazy"
-    class="max-w-[90%] max-md:max-w-full h-auto object-contain block"
-  />
-))}
+<PhotoStrip items={gallery.images} label={`${gallery.title} photos`}>
+  <CollectionTitle>{gallery.title}</CollectionTitle>
+</PhotoStrip>

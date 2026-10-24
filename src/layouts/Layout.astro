@@ -10,7 +10,6 @@ interface Props {
   description?: string;
   /** Absolute URL for link previews; defaults to the first collection cover. */
   image?: string;
-  center?: boolean;
 }
 
 const SITE_NAME = 'Steven Lu';
@@ -19,17 +18,13 @@ const {
   title,
   description = "Steven's personal website. Computing and maths student at the University of Melbourne, interested in machine learning. Projects, photography and more.",
   image = COLLECTIONS[0].coverImage,
-  center = false,
 } = Astro.props;
 
 const fullTitle = title ? `${title} · ${SITE_NAME}` : SITE_NAME;
 const base = import.meta.env.BASE_URL;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 
-const mainClass = [
-  'flex-1 overflow-y-auto h-dvh max-md:h-auto max-md:min-h-0 box-border p-5',
-  center ? 'flex justify-center items-center text-center' : '',
-].join(' ');
+const mainClass = 'flex-1 overflow-y-auto h-dvh max-md:h-auto max-md:min-h-0 box-border p-5';
 ---
 
 <!DOCTYPE html>
@@ -57,6 +52,9 @@ const mainClass = [
         if (localStorage.getItem('theme') === 'dark') {
           document.documentElement.classList.add('dark-mode');
         }
+        if (localStorage.getItem('nav') === 'collapsed') {
+          document.documentElement.classList.add('nav-collapsed');
+        }
       } catch (e) {}
     </script>
   </head>
@@ -67,5 +65,61 @@ const mainClass = [
         <slot />
       </main>
     </div>
+
+    <script>
+      // Scroll reveal for [data-reveal] elements (styles in global.css). Only elements that start
+      // below the fold (or photos still loading) are hidden, so loaded content never flashes and
+      // nothing is hidden without JS.
+      const STAGGER_MS = 60;
+      const DURATION_MS = 500;
+
+      const items = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
+
+      const reveal = (el: HTMLElement, delay: number) => {
+        el.style.transitionDelay = `${delay}ms`;
+        el.classList.add('reveal-in');
+        getComputedStyle(el).opacity; // commit the hidden state so the change below transitions
+        el.classList.remove('reveal-pending');
+
+        // Hand the element's own transitions back once the reveal is done
+        window.setTimeout(() => {
+          el.classList.remove('reveal-in');
+          el.style.transitionDelay = '';
+        }, DURATION_MS + delay + 50);
+      };
+
+      if ('IntersectionObserver' in window && items.length) {
+        // Below the fold, or a photo that hasn't loaded yet (it has no height, so its position means nothing)
+        const below = items.filter(
+          (el) =>
+            el.getBoundingClientRect().top > window.innerHeight ||
+            (el instanceof HTMLImageElement && !el.complete),
+        );
+        below.forEach((el) => el.classList.add('reveal-pending'));
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            const entering = entries.filter((e) => e.isIntersecting).map((e) => e.target as HTMLElement);
+
+            entering.forEach((el, i) => {
+              observer.unobserve(el);
+              const go = () => reveal(el, Math.min(i, 5) * STAGGER_MS);
+
+              // Wait for photos to load, so they fade in rather than fade in empty and then pop
+              const img = el instanceof HTMLImageElement ? el : el.querySelector('img');
+              if (img && !img.complete) {
+                img.addEventListener('load', go, { once: true });
+                img.addEventListener('error', go, { once: true });
+              } else {
+                go();
+              }
+            });
+          },
+          { rootMargin: '0px 0px -40px 0px' },
+        );
+
+        below.forEach((el) => observer.observe(el));
+      }
+    </script>
   </body>
 </html>

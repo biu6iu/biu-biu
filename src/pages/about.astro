@@ -12,38 +12,40 @@ const base = import.meta.env.BASE_URL;
   <section class="max-w-200 mx-auto p-8 box-border">
     <div class="mb-12">
       <SectionHeading>About</SectionHeading>
-      <p>Hi, my name is Steven!</p>
-      <p>I'm an undergrad at the University of Melbourne, studying computing and maths.</p>
-      <p>I'm interested in machine learning and enjoy building models to understand real-world data.</p>
-      <p>Outside of coding, I like to take photos, play basketball and appreciate JDM cars.</p>
-      <p>I also enjoy watching movies and listening to all sorts of music, so go judge my <a href="https://letterboxd.com/6iubiu/" target="_blank" rel="noopener noreferrer">Letterboxd</a> and <a href="https://www.last.fm/user/biubiuuu" target="_blank" rel="noopener noreferrer">last.fm</a></p>
-      <p>Feel free to get in contact with me! I'd love to chat about anything.</p>
+      <div class="border-t border-ink pt-2">
+        <p>Hi, my name is Steven!</p>
+        <p>I'm an undergrad at the University of Melbourne, studying computing and maths.</p>
+        <p>I'm interested in machine learning and enjoy building models to understand real-world data.</p>
+        <p>Outside of coding, I like to take photos, play basketball and appreciate JDM cars.</p>
+        <p>I also enjoy watching movies and listening to all sorts of music, so go judge my <a href="https://letterboxd.com/6iubiu/" target="_blank" rel="noopener noreferrer">Letterboxd</a> and <a href="https://www.last.fm/user/biubiuuu" target="_blank" rel="noopener noreferrer">last.fm</a></p>
+        <p>Feel free to get in contact with me! I'd love to chat about anything.</p>
+      </div>
     </div>
 
     <div class="mb-12">
-      <SectionHeading>Education</SectionHeading>
+      <SectionHeading sub>Education</SectionHeading>
       <div class="border-t border-ink">
         {EDUCATION.map((entry) => <TimelineEntry entry={entry} />)}
       </div>
     </div>
 
     <div class="mb-12">
-      <SectionHeading>Experience</SectionHeading>
+      <SectionHeading sub>Experience</SectionHeading>
       <div class="border-t border-ink">
         {EXPERIENCE.map((entry) => <TimelineEntry entry={entry} />)}
       </div>
     </div>
 
     <div class="mb-12">
-      <SectionHeading>Extracurriculars</SectionHeading>
+      <SectionHeading sub>Extracurriculars</SectionHeading>
       <div class="border-t border-ink">
         {EXTRACURRICULARS.map((entry) => <TimelineEntry entry={entry} bulleted />)}
       </div>
     </div>
 
     <div class="mb-12">
-      <SectionHeading>Skills</SectionHeading>
-      <div class="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] max-md:grid-cols-[1fr] gap-8 pt-6 border-t border-ink">
+      <SectionHeading sub>Skills</SectionHeading>
+      <div data-reveal class="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] max-md:grid-cols-[1fr] gap-8 pt-6 border-t border-ink">
         <div class="mb-6">
           <h3 class="text-[1.2rem] mb-2 font-medium">Programming</h3>
           <p class="text-ink-body leading-[1.6]">Python, Java, C, C++, R, JavaScript, TypeScript, SQL</p>
@@ -55,7 +57,7 @@ const base = import.meta.env.BASE_URL;
       </div>
     </div>
 
-    <div class="mb-12">
+    <div data-reveal class="mb-12">
       <p>Since you've scrolled this far, you might as well check out the <SectionLink href={`${base}photography`} text="photography page" /></p>
     </div>
   </section>

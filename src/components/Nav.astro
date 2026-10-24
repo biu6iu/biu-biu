@@ -35,14 +35,41 @@ const inactiveNavLinkClass = `${navLinkBaseClass} text-ink-muted hover:text-ink 
 
 <nav
   class="p-6.25 max-md:p-3.75 w-1/5 max-md:w-full h-[95%] max-md:h-auto
+         md:nav-collapsed:w-11.5 md:nav-collapsed:px-0
+         md:nav-collapsing:w-11.5 md:nav-collapsing:px-0
+         md:nav-collapsing:transition-[width,padding] md:nav-collapsing:duration-[280ms]
+         md:nav-collapsing:ease-[cubic-bezier(0.77,0,0.175,1)]
          box-border flex flex-col justify-between items-center
          sticky max-md:relative overflow-hidden"
 >
-  <h1 class="mt-5 text-[24px] max-md:text-[20px] font-normal">
+  <!-- Desktop only: on phones the nav is already a compact top bar.
+       Sits on the right edge, level with the links; the same spot is the centre of the collapsed rail. -->
+  <button
+    id="nav-toggle"
+    type="button"
+    aria-expanded="true"
+    aria-label="Hide navigation"
+    class="max-md:hidden absolute top-1/2 -translate-y-1/2 right-2
+           p-1.5 border-0 bg-transparent cursor-pointer rounded-md
+           text-ink-muted hover:text-ink transition-[color,scale] duration-150
+           ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97]"
+  >
+    <!-- Points left (collapse) when open, right (expand) when collapsed -->
+    <svg
+      width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.25"
+      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+      class="block transition-[rotate] duration-200 ease-[cubic-bezier(0.77,0,0.175,1)]
+             md:nav-collapsed:rotate-180 md:nav-collapsing:rotate-180 md:nav-collapsing:duration-[280ms]"
+    >
+      <polyline points="11,4 6,9 11,14" />
+    </svg>
+  </button>
+
+  <h1 class="nav-content md:nav-collapsed:hidden mt-5 text-[24px] max-md:text-[20px] font-normal">
     <a href={base} class="text-center no-underline text-ink">STEVEN LU</a>
   </h1>
 
-  <div class="flex-1 flex flex-col justify-center items-center max-md:my-2.5">
+  <div class="nav-content md:nav-collapsed:hidden flex-1 flex flex-col justify-center items-center max-md:my-2.5">
     <ul
       class="list-none m-0 p-0 flex flex-col items-center
              max-md:flex-row max-md:justify-center max-md:flex-wrap max-md:gap-5 max-xs:gap-2.5"
@@ -67,7 +94,7 @@ const inactiveNavLinkClass = `${navLinkBaseClass} text-ink-muted hover:text-ink 
   <div
     id="now-playing"
     hidden
-    class="max-md:hidden absolute bottom-5 inset-x-0 text-center px-6"
+    class="nav-content max-md:hidden md:nav-collapsed:hidden absolute bottom-5 inset-x-0 text-center px-6"
     data-user={LASTFM_USER}
     data-key={LASTFM_KEY}
   >
@@ -90,6 +117,58 @@ const inactiveNavLinkClass = `${navLinkBaseClass} text-ink-muted hover:text-ink 
 
     const isDark = root.classList.toggle('dark-mode');
     try { localStorage.setItem('theme', isDark ? 'dark' : 'light'); } catch (e) {}
+  });
+
+  // The collapsed class itself is set in Layout's head script, so a collapsed nav never flashes open
+  const navToggle = document.getElementById('nav-toggle') as HTMLButtonElement;
+  const COLLAPSE_MS = 280;
+  const REVEAL_MS = 200;
+  let navTimer: number | undefined;
+
+  const syncNavToggle = () => {
+    const collapsed = root.classList.contains('nav-collapsed');
+    navToggle.setAttribute('aria-expanded', String(!collapsed));
+    navToggle.setAttribute('aria-label', collapsed ? 'Show navigation' : 'Hide navigation');
+  };
+
+  syncNavToggle();
+
+  const collapseNav = () => {
+    root.classList.remove('nav-revealing');
+
+    // Reduced motion: no sliding sidebar, just close
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      root.classList.add('nav-collapsed');
+      return;
+    }
+
+    // .nav-collapsing narrows the sidebar and fades its contents out (global.css);
+    // the real collapsed state is applied once that has finished
+    root.classList.add('nav-collapsing');
+    navTimer = window.setTimeout(() => {
+      root.classList.remove('nav-collapsing');
+      root.classList.add('nav-collapsed');
+    }, COLLAPSE_MS);
+  };
+
+  const openNav = () => {
+    root.classList.remove('nav-collapsing', 'nav-collapsed');
+    root.classList.add('nav-revealing');
+    navTimer = window.setTimeout(() => root.classList.remove('nav-revealing'), REVEAL_MS);
+  };
+
+  navToggle.addEventListener('click', () => {
+    // A click mid-collapse reverses it
+    const isClosing = root.classList.contains('nav-collapsed') || root.classList.contains('nav-collapsing');
+    clearTimeout(navTimer);
+
+    if (isClosing) openNav();
+    else collapseNav();
+
+    // Label and storage reflect where the nav is heading, not the in-between state
+    navToggle.setAttribute('aria-expanded', String(isClosing));
+    navToggle.setAttribute('aria-label', isClosing ? 'Hide navigation' : 'Show navigation');
+    try { localStorage.setItem('nav', isClosing ? 'open' : 'collapsed'); } catch (e) {}
   });
 </script>
 
