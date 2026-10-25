@@ -11,7 +11,7 @@ import Layout from '../layouts/Layout.astro';
       aria-label="An animation of the Graham scan algorithm finding the convex hull of random points, drawn in ASCII characters"
       class="transition-opacity duration-500"
     ></canvas>
-    <p id="hull-caption" aria-hidden="true" class="m-0 font-serif text-ink-muted text-[11px] tracking-widest uppercase tabular-nums"></p>
+    <p class="m-0 text-sm text-ink-muted text-center">graham scan</p>
   </div>
 </Layout>
 
@@ -38,7 +38,6 @@ import Layout from '../layouts/Layout.astro';
 
   const container = document.getElementById('hull')!;
   const canvas = document.getElementById('hull-canvas') as HTMLCanvasElement;
-  const caption = document.getElementById('hull-caption')!;
   const ctx = canvas.getContext('2d')!;
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -170,12 +169,10 @@ import Layout from '../layouts/Layout.astro';
 
     if (!animate) {
       scene = { ...scene, points, pivot, hull };
-      caption.textContent = `Convex hull · ${hull.length} of ${count} points`;
       render();
       return;
     }
 
-    caption.textContent = `Graham scan · ${count} points`;
     for (const p of points) {
       scene.points.push(p);
       render();
@@ -183,11 +180,9 @@ import Layout from '../layouts/Layout.astro';
     }
 
     scene.pivot = pivot;
-    caption.textContent = 'Pivot · the lowest point';
     render();
     await visibleSleep(TIMING.pivot);
 
-    caption.textContent = 'Sorting by polar angle';
     for (const p of sorted) {
       scene.ray = p;
       render();
@@ -199,14 +194,12 @@ import Layout from '../layouts/Layout.astro';
     for (const step of steps) {
       if (step.kind === 'check') {
         scene.candidate = [step.from, step.to];
-        caption.textContent = `Scanning · stack of ${scene.stack.length}`;
         render();
         await visibleSleep(TIMING.check);
       } else if (step.kind === 'pop') {
         // A right turn: the last edge comes off the stack
         scene.stack.pop();
         scene.candidate = null;
-        caption.textContent = 'Right turn · pop';
         render();
         await visibleSleep(TIMING.pop);
       } else {
@@ -218,7 +211,6 @@ import Layout from '../layouts/Layout.astro';
     }
 
     scene.hull = hull;
-    caption.textContent = `Convex hull · ${hull.length} of ${count} points`;
     render();
     await visibleSleep(TIMING.done);
   };
