@@ -1,0 +1,23 @@
+---
+// A titled block of a page: the heading, then the content under a rule
+import SectionHeading from './SectionHeading.astro';
+
+interface Props {
+  title: string;
+  /** A smaller, left-aligned heading for the sections under a page's title */
+  sub?: boolean;
+  /** Fades the content in as a whole as it scrolls into view (see Layout.astro) */
+  reveal?: boolean;
+  /** Extra classes for the content */
+  class?: string;
+}
+
+const { title, sub = false, reveal = false, class: className } = Astro.props;
+---
+
+<div class="mb-12">
+  <SectionHeading sub={sub}>{title}</SectionHeading>
+  <div class:list={['border-t border-ink', className]} data-reveal={reveal ? '' : undefined}>
+    <slot />
+  </div>
+</div>

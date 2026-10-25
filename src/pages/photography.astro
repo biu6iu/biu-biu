@@ -2,17 +2,18 @@
 import Layout from '../layouts/Layout.astro';
 import PhotoStrip from '../components/PhotoStrip.astro';
 import SectionHeading from '../components/SectionHeading.astro';
-import { COLLECTIONS, collectionSlug } from '../data/collections.ts';
+import { GALLERIES } from '../data/galleries.ts';
 
 const base = import.meta.env.BASE_URL;
 
-const covers = COLLECTIONS.map((collection) => ({
-  src: collection.coverImage,
-  alt: collection.title,
-  width: collection.coverWidth,
-  height: collection.coverHeight,
-  href: `${base}collections/${collectionSlug(collection)}`,
-  caption: collection.title,
+// Each collection's cover is the first photo of its gallery
+const covers = GALLERIES.map(({ slug, collectionTitle, images: [cover] }) => ({
+  src: cover.src,
+  alt: collectionTitle,
+  width: cover.width,
+  height: cover.height,
+  href: `${base}collections/${slug}`,
+  caption: collectionTitle,
 }));
 ---
 

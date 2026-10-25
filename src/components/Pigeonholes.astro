@@ -1,19 +1,15 @@
 ---
 // ASCII pigeonhole principle for the about page: one more pigeon than holes, so after every landing some
 // hole holds two. The pigeon that flies next always leaves the hole the last one landed in.
+import AsciiFigure from './AsciiFigure.astro';
 ---
 
-<div class="flex flex-col items-center" data-pigeonholes>
-  <pre
-    aria-hidden="true"
-    class="m-0 font-mono text-[15px] max-sm:text-[12px] leading-[1.15] text-ink-muted"
-    data-pigeonholes-grid
-  ></pre>
-  <p class="m-0 mt-3 text-sm text-ink-muted text-center">pigeonhole principle</p>
-</div>
+<AsciiFigure name="pigeonholes" caption="pigeonhole principle" class="text-[15px] max-sm:text-[12px] leading-[1.15]" />
 
 <script>
   import { land, nextFlight, roost, type Flight, type Pigeon } from '../lib/pigeonholes.ts';
+  import { charWidth, gridToHtml } from '../lib/ascii.ts';
+  import { prefersReducedMotion, whileVisible } from '../lib/motion.ts';
 
   const HOLE_WIDTH = 7; // "|     |": five spaces inside, room for two pigeons
   const GAP = 1;
@@ -36,14 +32,11 @@
   type Airborne = Flight & { start: number; duration: number };
 
   document.querySelectorAll<HTMLElement>('[data-pigeonholes]').forEach((root) => {
-    const grid = root.querySelector<HTMLElement>('[data-pigeonholes-grid]')!;
-    // Measure one character of the monospace font to see how many holes fit the width available
-    grid.textContent = '0'.repeat(10);
-    const charWidth = grid.getBoundingClientRect().width / 10;
-    const fit = Math.floor((root.clientWidth / charWidth + GAP) / (HOLE_WIDTH + GAP));
+    const grid = root.querySelector<HTMLElement>('[data-ascii-grid]')!;
+    // As many holes as fit the width available
+    const fit = Math.floor((root.clientWidth / charWidth(grid) + GAP) / (HOLE_WIDTH + GAP));
     const holes = Math.max(MIN_HOLES, Math.min(MAX_HOLES, fit));
     const cols = holes * (HOLE_WIDTH + GAP) - GAP;
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const holeLeft = (hole: number) => hole * (HOLE_WIDTH + GAP);
     // The two seats sit at the 2nd and 4th spaces inside the hole: "| o o |"
@@ -108,33 +101,24 @@
       }
 
       // Pigeons in the page's ink colour, the holes in the muted colour the <pre> already has
-      const html = chars
-        .map((row, y) => row.map((c, x) => (isPigeon[y][x] ? `<span class="text-ink">${c}</span>` : c)).join(''))
-        .join('\n');
+      const html = gridToHtml(chars, isPigeon);
       if (html !== lastHtml) {
         grid.innerHTML = html;
         lastHtml = html;
       }
     };
 
-    if (reduceMotion) {
+    if (prefersReducedMotion()) {
       draw(0);
       return;
     }
 
-    let frame = 0;
-    const tick = (now: number) => {
-      if (!flight && now >= restUntil) startFlight(now);
-      draw(now);
-      frame = requestAnimationFrame(tick);
-    };
-
     // Only animate while on screen
     restUntil = performance.now() + REST_MS;
     draw(performance.now());
-    new IntersectionObserver(([entry]) => {
-      cancelAnimationFrame(frame);
-      if (entry.isIntersecting) frame = requestAnimationFrame(tick);
-    }).observe(root);
+    whileVisible(root, (now) => {
+      if (!flight && now >= restUntil) startFlight(now);
+      draw(now);
+    });
   });
 </script>

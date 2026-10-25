@@ -1,0 +1,15 @@
+---
+// "← Somewhere" back up to a parent page
+
+interface Props {
+  href: string;
+  class?: string;
+}
+
+const { href, class: className } = Astro.props;
+---
+
+<a
+  href={href}
+  class:list={['text-ink-soft text-[1rem] no-underline transition-colors duration-200 ease-[ease] hover:text-ink', className]}
+>← <slot /></a>

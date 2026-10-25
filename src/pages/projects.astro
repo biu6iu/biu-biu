@@ -1,36 +1,32 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import ProjectListItem from '../components/ProjectListItem.astro';
-import SectionHeading from '../components/SectionHeading.astro';
+import Page from '../components/Page.astro';
+import Section from '../components/Section.astro';
 import TortoiseHare from '../components/TortoiseHare.astro';
 import { projectsByYear } from '../data/projects.ts';
 ---
 
 <Layout title="Projects">
-  <section class="max-w-200 mx-auto p-8 box-border">
-
-    <div class="mb-12">
-      <SectionHeading>Projects</SectionHeading>
-
-      <div class="group/list border-t border-ink">
-        {projectsByYear().map(([year, projects], i) => (
-          <div
-            class:list={[
-              'grid grid-cols-[150px_1fr] max-md:grid-cols-[1fr] gap-4 items-start pt-6',
-              { 'border-t border-ink mt-6': i > 0 },
-            ]}
-          >
-            <p data-reveal class="text-ink-soft text-[1rem] col-start-1">{year}</p>
-            <ul class="col-start-2 max-md:col-start-1 list-none m-0 p-0">
-              {projects.map((project) => <ProjectListItem project={project} />)}
-            </ul>
-          </div>
-        ))}
-      </div>
-    </div>
+  <Page>
+    <Section title="Projects" class="group/list">
+      {projectsByYear().map(([year, projects], i) => (
+        <div
+          class:list={[
+            'grid grid-cols-[150px_1fr] max-md:grid-cols-[1fr] gap-4 items-start pt-6',
+            { 'border-t border-ink mt-6': i > 0 },
+          ]}
+        >
+          <p data-reveal class="text-ink-soft text-[1rem] col-start-1">{year}</p>
+          <ul class="col-start-2 max-md:col-start-1 list-none m-0 p-0">
+            {projects.map((project) => <ProjectListItem project={project} />)}
+          </ul>
+        </div>
+      ))}
+    </Section>
 
     <div data-reveal class="mb-12">
       <TortoiseHare />
     </div>
-  </section>
+  </Page>
 </Layout>

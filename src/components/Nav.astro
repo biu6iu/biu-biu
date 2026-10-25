@@ -1,4 +1,7 @@
 ---
+import Chevron from './Chevron.astro';
+import { ICON_BUTTON } from '../styles/classes.ts';
+
 const NAV_ITEMS = [
   { label: 'ABOUT', path: 'about' },
   { label: 'PROJECTS', path: 'projects' },
@@ -22,16 +25,13 @@ function isActive(path: string): boolean {
   return path === 'photography' && (currentPath === `${base}collections` || currentPath.startsWith(`${base}collections/`));
 }
 
-const linkClass =
-  'block p-2.5 max-xs:p-2 text-[13px] max-xs:text-[12px] no-underline text-ink rounded-lg ' +
-  'transition-[color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:text-ink-muted ' +
-  'active:text-ink-muted active:scale-[0.97]';
-
 const navLinkBaseClass =
   'block p-2.5 max-xs:p-2 text-[13px] max-xs:text-[12px] no-underline rounded-lg ' +
-  'transition-[color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97]';
+  'transition-[color,transform] duration-150 ease-out-quint active:scale-[0.97]';
 const activeNavLinkClass = `${navLinkBaseClass} text-ink`;
 const inactiveNavLinkClass = `${navLinkBaseClass} text-ink-muted hover:text-ink active:text-ink-muted`;
+// The theme toggle sits among the links in full ink, greying on hover
+const themeToggleClass = `${activeNavLinkClass} hover:text-ink-muted active:text-ink-muted`;
 ---
 
 <nav
@@ -39,7 +39,7 @@ const inactiveNavLinkClass = `${navLinkBaseClass} text-ink-muted hover:text-ink 
          md:nav-collapsed:w-11.5 md:nav-collapsed:px-0
          md:nav-collapsing:w-11.5 md:nav-collapsing:px-0
          md:nav-collapsing:transition-[width,padding] md:nav-collapsing:duration-[280ms]
-         md:nav-collapsing:ease-[cubic-bezier(0.77,0,0.175,1)]
+         md:nav-collapsing:ease-in-out-quart
          box-border flex flex-col justify-between items-center
          sticky max-md:relative overflow-hidden"
 >
@@ -50,20 +50,13 @@ const inactiveNavLinkClass = `${navLinkBaseClass} text-ink-muted hover:text-ink 
     type="button"
     aria-expanded="true"
     aria-label="Hide navigation"
-    class="max-md:hidden absolute top-1/2 -translate-y-1/2 right-2
-           p-1.5 border-0 bg-transparent cursor-pointer rounded-md
-           text-ink-muted hover:text-ink transition-[color,scale] duration-150
-           ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97]"
+    class={`max-md:hidden absolute top-1/2 -translate-y-1/2 right-2 ${ICON_BUTTON}`}
   >
     <!-- Points left (collapse) when open, right (expand) when collapsed -->
-    <svg
-      width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.25"
-      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
-      class="block transition-[rotate] duration-200 ease-[cubic-bezier(0.77,0,0.175,1)]
+    <Chevron
+      class="transition-[rotate] duration-200 ease-in-out-quart
              md:nav-collapsed:rotate-180 md:nav-collapsing:rotate-180 md:nav-collapsing:duration-[280ms]"
-    >
-      <polyline points="11,4 6,9 11,14" />
-    </svg>
+    />
   </button>
 
   <h1 class="nav-content md:nav-collapsed:hidden mt-5 text-[24px] max-md:text-[20px] font-normal">
@@ -83,7 +76,7 @@ const inactiveNavLinkClass = `${navLinkBaseClass} text-ink-muted hover:text-ink 
         </li>
       ))}
       <li>
-        <button id="theme-toggle" class={`${linkClass} bg-transparent border-0 cursor-pointer font-serif uppercase`}>
+        <button id="theme-toggle" class={`${themeToggleClass} bg-transparent border-0 cursor-pointer font-serif uppercase`}>
           <!-- Both labels are rendered and switched by CSS, so the right one shows before any script runs -->
           <span class="dark:hidden">Light Mode</span>
           <span class="hidden dark:inline">Dark Mode</span>
@@ -106,6 +99,8 @@ const inactiveNavLinkClass = `${navLinkBaseClass} text-ink-muted hover:text-ink 
 </nav>
 
 <script>
+  import { prefersReducedMotion } from '../lib/motion.ts';
+
   const themeToggle = document.getElementById('theme-toggle') as HTMLButtonElement;
   const root = document.documentElement;
   let fadeTimer: number | undefined;
@@ -122,23 +117,23 @@ const inactiveNavLinkClass = `${navLinkBaseClass} text-ink-muted hover:text-ink 
 
   // The collapsed class itself is set in Layout's head script, so a collapsed nav never flashes open
   const navToggle = document.getElementById('nav-toggle') as HTMLButtonElement;
+  // Match the sidebar's 280ms width transition above and the nav-reveal animation in global.css
   const COLLAPSE_MS = 280;
   const REVEAL_MS = 200;
   let navTimer: number | undefined;
 
-  const syncNavToggle = () => {
-    const collapsed = root.classList.contains('nav-collapsed');
-    navToggle.setAttribute('aria-expanded', String(!collapsed));
-    navToggle.setAttribute('aria-label', collapsed ? 'Show navigation' : 'Hide navigation');
+  const labelNavToggle = (open: boolean) => {
+    navToggle.setAttribute('aria-expanded', String(open));
+    navToggle.setAttribute('aria-label', open ? 'Hide navigation' : 'Show navigation');
   };
 
-  syncNavToggle();
+  labelNavToggle(!root.classList.contains('nav-collapsed'));
 
   const collapseNav = () => {
     root.classList.remove('nav-revealing');
 
     // Reduced motion: no sliding sidebar, just close
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (prefersReducedMotion()) {
       root.classList.add('nav-collapsed');
       return;
     }
@@ -167,8 +162,7 @@ const inactiveNavLinkClass = `${navLinkBaseClass} text-ink-muted hover:text-ink 
     else collapseNav();
 
     // Label and storage reflect where the nav is heading, not the in-between state
-    navToggle.setAttribute('aria-expanded', String(isClosing));
-    navToggle.setAttribute('aria-label', isClosing ? 'Hide navigation' : 'Show navigation');
+    labelNavToggle(isClosing);
     try { localStorage.setItem('nav', isClosing ? 'open' : 'collapsed'); } catch (e) {}
   });
 </script>

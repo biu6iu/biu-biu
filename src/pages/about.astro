@@ -1,62 +1,48 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import Page from '../components/Page.astro';
+import Section from '../components/Section.astro';
 import TimelineEntry from '../components/TimelineEntry.astro';
-import SectionHeading from '../components/SectionHeading.astro';
 import Pigeonholes from '../components/Pigeonholes.astro';
 import { EDUCATION, EXPERIENCE, EXTRACURRICULARS } from '../data/about.ts';
+
+const TIMELINES = [
+  { title: 'Education', entries: EDUCATION },
+  { title: 'Experience', entries: EXPERIENCE },
+  { title: 'Extracurriculars', entries: EXTRACURRICULARS, bulleted: true },
+];
 ---
 
 <Layout title="About">
-  <section class="max-w-200 mx-auto p-8 box-border">
-    <div class="mb-12">
-      <SectionHeading>About</SectionHeading>
-      <div class="border-t border-ink pt-4 [&>p]:my-1.5">
-        <p>Hi, my name is Steven!</p>
-        <p>I'm an undergrad at the University of Melbourne, studying computing and maths.</p>
-        <p>I love learning algorithms and applying maths to the real world.</p>
-        <p>(I've scattered a few of my favourite algorithms, concepts, and whatever on each page!)</p>
-        <p>I also enjoy watching movies and listening to music, so go judge my <a href="https://letterboxd.com/6iubiu/" target="_blank" rel="noopener noreferrer">Letterboxd</a> and <a href="https://www.last.fm/user/biubiuuu" target="_blank" rel="noopener noreferrer">last.fm</a> :)</p>
-      </div>
-    </div>
+  <Page>
+    <Section title="About" class="pt-4 [&>p]:my-1.5">
+      <p>Hi, my name is Steven!</p>
+      <p>I'm an undergrad at the University of Melbourne, studying computing and maths.</p>
+      <p>I love learning algorithms and applying maths to the real world.</p>
+      <p>(I've scattered a few of my favourite algorithms, concepts, and whatever on each page!)</p>
+      <p>I also enjoy watching movies and listening to music, so go judge my <a href="https://letterboxd.com/6iubiu/" target="_blank" rel="noopener noreferrer">Letterboxd</a> and <a href="https://www.last.fm/user/biubiuuu" target="_blank" rel="noopener noreferrer">last.fm</a> :)</p>
+    </Section>
 
-    <div class="mb-12">
-      <SectionHeading sub>Education</SectionHeading>
-      <div class="border-t border-ink">
-        {EDUCATION.map((entry) => <TimelineEntry entry={entry} />)}
-      </div>
-    </div>
+    {TIMELINES.map(({ title, entries, bulleted }) => (
+      <Section title={title} sub>
+        {entries.map((entry) => <TimelineEntry entry={entry} bulleted={bulleted} />)}
+      </Section>
+    ))}
 
-    <div class="mb-12">
-      <SectionHeading sub>Experience</SectionHeading>
-      <div class="border-t border-ink">
-        {EXPERIENCE.map((entry) => <TimelineEntry entry={entry} />)}
+    <Section title="Skills" sub reveal class="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] max-md:grid-cols-[1fr] gap-8 pt-6">
+      <div class="mb-6">
+        <h3 class="text-[1.2rem] mb-2 font-medium">Programming</h3>
+        <p class="text-ink-body">Python, Java, C, C++, R, JavaScript, TypeScript, SQL</p>
       </div>
-    </div>
-
-    <div class="mb-12">
-      <SectionHeading sub>Extracurriculars</SectionHeading>
-      <div class="border-t border-ink">
-        {EXTRACURRICULARS.map((entry) => <TimelineEntry entry={entry} bulleted />)}
+      <div class="mb-6">
+        <h3 class="text-[1.2rem] mb-2 font-medium">Tools/Frameworks</h3>
+        <p class="text-ink-body">Git, FastAPI, Pandas, NumPy, scikit-learn, PyTorch, Matplotlib, Seaborn, SvelteKit, Next.js, React, Astro</p>
       </div>
-    </div>
-
-    <div class="mb-12">
-      <SectionHeading sub>Skills</SectionHeading>
-      <div data-reveal class="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] max-md:grid-cols-[1fr] gap-8 pt-6 border-t border-ink">
-        <div class="mb-6">
-          <h3 class="text-[1.2rem] mb-2 font-medium">Programming</h3>
-          <p class="text-ink-body">Python, Java, C, C++, R, JavaScript, TypeScript, SQL</p>
-        </div>
-        <div class="mb-6">
-          <h3 class="text-[1.2rem] mb-2 font-medium">Tools/Frameworks</h3>
-          <p class="text-ink-body">Git, FastAPI, Pandas, NumPy, scikit-learn, PyTorch, Matplotlib, Seaborn, SvelteKit, Next.js, React, Astro</p>
-        </div>
-      </div>
-    </div>
+    </Section>
 
     <!-- Pulled up: the empty sky above the holes already reads as space after Skills -->
     <div data-reveal class="-mt-8 mb-12">
       <Pigeonholes />
     </div>
-  </section>
+  </Page>
 </Layout>

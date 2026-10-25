@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import SectionHeading from '../components/SectionHeading.astro';
+import Page from '../components/Page.astro';
+import Section from '../components/Section.astro';
 import SectionLink from '../components/SectionLink.astro';
 import TimelineRow from '../components/TimelineRow.astro';
 import Cantor from '../components/Cantor.astro';
@@ -27,13 +28,10 @@ const CONTACT: Row[] = [
 ---
 
 <Layout title="Contact">
-  <section class="max-w-200 mx-auto p-8 box-border">
-    <div class="mb-12">
-      <SectionHeading>Contact</SectionHeading>
-      <div class="border-t border-ink pt-2">
-        <p>I'm always happy to chat about machine learning, projects, photography or anything else.</p>
-        <p class="text-ink-muted text-[15px]" data-local-time data-time-zone={TIME_ZONE} data-city={CITY}>Based in {CITY}.</p>
-      </div>
+  <Page>
+    <Section title="Contact" class="pt-2">
+      <p>I'm always happy to chat about machine learning, projects, photography or anything else.</p>
+      <p class="text-ink-muted text-[15px]" data-local-time data-time-zone={TIME_ZONE} data-city={CITY}>Based in {CITY}.</p>
       <div class="mt-6 border-t border-line">
         {CONTACT.map((row) => (
           <TimelineRow date={row.label}>
@@ -44,12 +42,12 @@ const CONTACT: Row[] = [
           </TimelineRow>
         ))}
       </div>
-    </div>
+    </Section>
 
     <div data-reveal class="mb-12">
       <Cantor />
     </div>
-  </section>
+  </Page>
 </Layout>
 
 <script>

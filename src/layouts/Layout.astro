@@ -2,13 +2,13 @@
 import Nav from '../components/Nav.astro';
 import '../styles/global.css';
 
-import { COLLECTIONS } from '../data/collections.ts';
+import { GALLERIES } from '../data/galleries.ts';
 
 interface Props {
   /** Page name; " · Steven Lu" is appended. Omit on the home page. */
   title?: string;
   description?: string;
-  /** Absolute URL for link previews; defaults to the first collection cover. */
+  /** Absolute URL for link previews; defaults to the first collection's cover. */
   image?: string;
 }
 
@@ -18,7 +18,7 @@ const SOURCE_URL = 'https://github.com/biu6iu/biu-biu';
 const {
   title,
   description = "Steven's personal website. Computing and maths student at the University of Melbourne, interested in machine learning. Projects, photography and more.",
-  image = COLLECTIONS[0].coverImage,
+  image = GALLERIES[0].images[0].src,
 } = Astro.props;
 
 const fullTitle = title ? `${title} · ${SITE_NAME}` : SITE_NAME;
@@ -81,6 +81,7 @@ const mainClass = 'flex-1 flex flex-col overflow-y-auto h-dvh max-md:h-auto max-
       // below the fold (or photos still loading) are hidden, so loaded content never flashes and
       // nothing is hidden without JS.
       const STAGGER_MS = 60;
+      // Matches .reveal-in in global.css
       const DURATION_MS = 500;
 
       const items = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
