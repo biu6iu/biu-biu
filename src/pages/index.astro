@@ -17,6 +17,7 @@ import Layout from '../layouts/Layout.astro';
 
 <script>
   import { grahamScan, randomPoints, type Point } from '../lib/graham.ts';
+  import { prefersReducedMotion, randomInt } from '../lib/motion.ts';
 
   // The grid is GRID × GRID cells, each two characters wide so a cell comes out roughly square
   const GRID = 50;
@@ -39,7 +40,6 @@ import Layout from '../layouts/Layout.astro';
   const container = document.getElementById('hull')!;
   const canvas = document.getElementById('hull-canvas') as HTMLCanvasElement;
   const ctx = canvas.getContext('2d')!;
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
   // Waits that don't count time spent in a background tab
@@ -173,8 +173,7 @@ import Layout from '../layouts/Layout.astro';
   // ---- One run of the algorithm ----
 
   const run = async (animate: boolean) => {
-    const count = MIN_POINTS + Math.floor(Math.random() * (MAX_POINTS - MIN_POINTS + 1));
-    const points = randomPoints(count, GRID);
+    const points = randomPoints(randomInt(MIN_POINTS, MAX_POINTS), GRID);
     const { pivot, sorted, steps, hull } = grahamScan(points);
     scene = emptyScene();
 
@@ -242,7 +241,7 @@ import Layout from '../layouts/Layout.astro';
 
   const loop = async () => {
     // Reduced motion: one finished hull, no animation
-    if (reduceMotion) return run(false);
+    if (prefersReducedMotion()) return run(false);
     while (true) {
       await run(true);
       canvas.classList.add('opacity-0');

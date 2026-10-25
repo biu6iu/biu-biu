@@ -1,5 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import Page from '../../components/Page.astro';
+import BackLink from '../../components/BackLink.astro';
 import SectionLink from '../../components/SectionLink.astro';
 import { PROJECTS } from '../../data/projects.ts';
 
@@ -15,9 +17,9 @@ const base = import.meta.env.BASE_URL;
 ---
 
 <Layout title={project.title} description={project.summary}>
-  <section class="max-w-200 mx-auto p-8 box-border">
+  <Page>
     <p class="mb-6">
-      <a href={`${base}projects`} class="text-ink-soft text-[1rem] no-underline transition-colors duration-200 ease-[ease] hover:text-ink">← Projects</a>
+      <BackLink href={`${base}projects`}>Projects</BackLink>
     </p>
 
     <h2 class="text-[18px] max-md:text-[16px] font-normal uppercase">{project.title}</h2>
@@ -35,5 +37,5 @@ const base = import.meta.env.BASE_URL;
         ))}
       </div>
     </div>
-  </section>
+  </Page>
 </Layout>

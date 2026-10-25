@@ -1,5 +1,6 @@
 ---
 import type { Gallery } from '../data/galleries.ts';
+import BackLink from './BackLink.astro';
 import PhotoStrip from './PhotoStrip.astro';
 import SectionHeading from './SectionHeading.astro';
 
@@ -18,10 +19,7 @@ const base = import.meta.env.BASE_URL;
        photo's left edge; the same inset on the right and the equal side columns keep the title centred. -->
   <div class="grid grid-cols-[1fr_auto_1fr] items-baseline gap-4 px-[12.5cqw] pt-8">
     <!-- On phones only the arrow shows, so the title keeps the width it needs -->
-    <a
-      href={`${base}photography`}
-      class="justify-self-start whitespace-nowrap text-ink-soft text-[1rem] no-underline transition-colors duration-200 ease-[ease] hover:text-ink"
-    >← <span class="max-sm:sr-only">Collections</span></a>
+    <BackLink href={`${base}photography`} class="justify-self-start whitespace-nowrap"><span class="max-sm:sr-only">Collections</span></BackLink>
     <SectionHeading>{gallery.title}</SectionHeading>
   </div>
 </PhotoStrip>

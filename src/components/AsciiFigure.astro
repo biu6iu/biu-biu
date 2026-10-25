@@ -1,0 +1,19 @@
+---
+// The frame shared by the ASCII animations: a <pre> the script draws into, with a caption underneath.
+// The root carries data-{name} for the script to find; the <pre> is [data-ascii-grid] inside it.
+
+interface Props {
+  /** Marks the root as data-{name} */
+  name: string;
+  caption: string;
+  /** Font size, leading and any transition for the <pre> */
+  class: string;
+}
+
+const { name, caption, class: preClass } = Astro.props;
+---
+
+<div class="flex flex-col items-center" {...{ [`data-${name}`]: '' }}>
+  <pre aria-hidden="true" class:list={['m-0 font-mono text-ink-muted', preClass]} data-ascii-grid></pre>
+  <p class="m-0 mt-3 text-sm text-ink-muted text-center">{caption}</p>
+</div>

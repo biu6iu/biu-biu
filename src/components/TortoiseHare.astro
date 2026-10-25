@@ -3,19 +3,19 @@
 // one node at a time and the hare two, until they meet inside the loop. The tortoise then goes back to the
 // head and both move one node at a time, meeting again where the loop starts. Then the drawing fades out
 // and back in with a new list.
+import AsciiFigure from './AsciiFigure.astro';
 ---
 
-<div class="flex flex-col items-center" data-floyd>
-  <pre
-    aria-hidden="true"
-    class="m-0 font-mono text-[13px] max-sm:text-[12px] leading-[1.15] text-ink-muted transition-opacity duration-500"
-    data-floyd-grid
-  ></pre>
-  <p class="m-0 mt-3 text-sm text-ink-muted text-center">floyd's cycle detection</p>
-</div>
+<AsciiFigure
+  name="floyd"
+  caption="floyd's cycle detection"
+  class="text-[13px] max-sm:text-[12px] leading-[1.15] transition-opacity duration-500"
+/>
 
 <script>
   import { floyd, type FloydPhase, type FloydStep } from '../lib/floyd.ts';
+  import { charWidth, gridToHtml } from '../lib/ascii.ts';
+  import { fadeBetweenRounds, playSteps, prefersReducedMotion, randomInt } from '../lib/motion.ts';
 
   // Nodes sit 4 columns apart: "o---o"
   const SPACING = 4;
@@ -40,15 +40,8 @@
   const FADE_MS = 500;
 
   document.querySelectorAll<HTMLElement>('[data-floyd]').forEach((root) => {
-    const grid = root.querySelector<HTMLElement>('[data-floyd-grid]')!;
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    // Measure one character of the monospace font to see how many nodes fit across
-    grid.textContent = '0'.repeat(10);
-    const charWidth = grid.getBoundingClientRect().width / 10;
-    const maxNodesAcross = Math.floor((root.clientWidth / charWidth - 1) / SPACING);
-
-    const randomIn = (min: number, max: number) => min + Math.floor(Math.random() * (max - min + 1));
+    const grid = root.querySelector<HTMLElement>('[data-ascii-grid]')!;
+    const maxNodesAcross = Math.floor((root.clientWidth / charWidth(grid) - 1) / SPACING);
 
     let tail = 0; // nodes 0 .. tail-1 lead to the loop, node `tail` is where it starts
     let edge = 0;
@@ -60,8 +53,8 @@
     // The loop goes clockwise from where the tail joins it: up a diagonal, along the top, down to its
     // far end, back along the bottom and up into the start again
     const newList = () => {
-      tail = randomIn(MIN_TAIL, MAX_TAIL);
-      edge = randomIn(MIN_EDGE, MAX_EDGE);
+      tail = randomInt(MIN_TAIL, MAX_TAIL);
+      edge = randomInt(MIN_EDGE, MAX_EDGE);
       // Shrink whichever part is longer until it fits
       while (tail + edge > maxNodesAcross && tail + edge > MIN_TAIL + MIN_EDGE) {
         if (tail > MIN_TAIL && (tail >= edge || edge === MIN_EDGE)) tail--;
@@ -107,63 +100,31 @@
         mark(hare, 'H');
       }
 
-      grid.innerHTML = chars
-        .map((row, y) => row.map((c, x) => (ink[y][x] ? `<span class="text-ink">${c}</span>` : c)).join(''))
-        .join('\n');
-    };
-
-    // Moves on to the next step and returns how long it stays on screen. After the last step the drawing
-    // fades out, swaps in a new list while hidden, and fades back in.
-    let fading = false;
-    const advance = (): number => {
-      if (fading) {
-        newList();
-        grid.style.opacity = '';
-        fading = false;
-        return HOLD_MS.start;
-      }
-      if (current === steps.length - 1) {
-        grid.style.opacity = '0';
-        fading = true;
-        return FADE_MS;
-      }
-      current++;
-      return HOLD_MS[steps[current].phase];
+      grid.innerHTML = gridToHtml(chars, ink);
     };
 
     newList();
 
-    if (reduceMotion) {
+    if (prefersReducedMotion()) {
       // Show the answer: both pointers on the node where the loop starts
       current = steps.length - 1;
       draw();
       return;
     }
 
-    // Runs on its own clock, which only moves while it's on screen, so it resumes where it was
-    let clock = 0;
-    let nextAt = HOLD_MS.start;
-    let frame = 0;
-    let last = 0;
-    const loopFrame = (now: number) => {
-      clock += Math.min(100, now - last);
-      last = now;
-      let changed = false;
-      while (clock >= nextAt) {
-        nextAt += advance();
-        changed = true;
-      }
-      if (changed) draw();
-      frame = requestAnimationFrame(loopFrame);
-    };
+    // Moves on to the next step and returns how long it stays on screen. After the last step the drawing
+    // fades out, swaps in a new list while hidden, and fades back in.
+    const advance = fadeBetweenRounds(
+      grid,
+      FADE_MS,
+      () => (current === steps.length - 1 ? null : HOLD_MS[steps[++current].phase]),
+      () => {
+        newList();
+        return HOLD_MS.start;
+      },
+    );
 
     draw();
-    new IntersectionObserver(([entry]) => {
-      cancelAnimationFrame(frame);
-      if (entry.isIntersecting) {
-        last = performance.now();
-        frame = requestAnimationFrame(loopFrame);
-      }
-    }).observe(root);
+    playSteps(root, HOLD_MS.start, advance, draw);
   });
 </script>

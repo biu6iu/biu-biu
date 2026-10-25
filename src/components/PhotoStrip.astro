@@ -20,22 +20,21 @@ interface Props {
   label: string;
 }
 
+import Chevron from './Chevron.astro';
+import { ICON_BUTTON } from '../styles/classes.ts';
+
 const { items, label } = Astro.props;
 const count = items.length;
 const hasCaptions = items.some((item) => item.caption);
 
-const controlClass =
-  'p-1.5 border-0 bg-transparent cursor-pointer rounded-md text-ink-muted hover:text-ink ' +
-  'disabled:opacity-30 disabled:cursor-default disabled:hover:text-ink-muted ' +
-  'transition-[color,scale] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97]';
+const controlClass = `${ICON_BUTTON} disabled:opacity-30 disabled:cursor-default disabled:hover:text-ink-muted`;
 
-const itemClass = 'block shrink-0 w-auto snap-center opacity-(--fade) cursor-pointer data-current:cursor-default';
+const itemBaseClass = 'block shrink-0 w-auto snap-center opacity-(--fade) cursor-pointer';
+const itemClass = `${itemBaseClass} data-current:cursor-default`;
 
 // Links stay clickable while centred, so they keep the pointer and grow slightly on hover to show it.
 // Only scale transitions: opacity is repainted every scroll frame and would lag behind if eased.
-const linkClass =
-  'block shrink-0 w-auto snap-center opacity-(--fade) cursor-pointer hover:scale-[1.02] ' +
-  'transition-[scale] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]';
+const linkClass = `${itemBaseClass} hover:scale-[1.02] transition-[scale] duration-200 ease-out-quint`;
 
 // Same size rule as the home page slideshow (index.astro): at most 75% of the main area wide and 75% of
 // the screen tall. cqw is a percentage of the strip, which spans the main area like the slideshow does.
@@ -63,34 +62,21 @@ const itemStyle = (item: StripItem, i: number) =>
     aria-label={`${label}. Use the arrow keys to move between photos.`}
   >
     {items.map((item, i) => {
-      const loading = i < 2 ? 'eager' : 'lazy';
-      const current = i === 0 ? '' : undefined;
+      const image = { src: item.src, alt: item.alt, width: item.width, height: item.height, loading: i < 2 ? 'eager' : 'lazy' } as const;
+      // On the link when there is one, otherwise on the photo itself
+      const itemAttrs = {
+        'data-strip-item': '',
+        'data-caption': item.caption,
+        'data-reveal': '',
+        'data-current': i === 0 ? '' : undefined,
+        style: itemStyle(item, i),
+      };
       return item.href ? (
-        <a
-          href={item.href}
-          data-strip-item
-          data-caption={item.caption}
-          data-reveal
-          data-current={current}
-          class={linkClass}
-          style={itemStyle(item, i)}
-        >
-          <img src={item.src} alt={item.alt} width={item.width} height={item.height} loading={loading} class="block w-full h-full" />
+        <a href={item.href} class={linkClass} {...itemAttrs}>
+          <img {...image} class="block w-full h-full" />
         </a>
       ) : (
-        <img
-          src={item.src}
-          alt={item.alt}
-          width={item.width}
-          height={item.height}
-          loading={loading}
-          data-strip-item
-          data-caption={item.caption}
-          data-reveal
-          data-current={current}
-          class={itemClass}
-          style={itemStyle(item, i)}
-        />
+        <img {...image} class={itemClass} {...itemAttrs} />
       );
     })}
   </div>
@@ -102,15 +88,11 @@ const itemStyle = (item: StripItem, i: number) =>
 
     <div class:list={['flex justify-center items-center gap-6 text-sm text-ink-muted', hasCaptions ? 'mt-2' : 'mt-5']}>
       <button type="button" data-prev aria-label="Previous" class={controlClass} disabled>
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="block">
-          <polyline points="11,4 6,9 11,14" />
-        </svg>
+        <Chevron />
       </button>
       <span data-counter class="min-w-[5ch] text-center tabular-nums">1 / {count}</span>
       <button type="button" data-next aria-label="Next" class={controlClass} disabled={count < 2}>
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="block rotate-180">
-          <polyline points="11,4 6,9 11,14" />
-        </svg>
+        <Chevron class="rotate-180" />
       </button>
     </div>
 
@@ -119,6 +101,8 @@ const itemStyle = (item: StripItem, i: number) =>
 </div>
 
 <script>
+  import { prefersReducedMotion } from '../lib/motion.ts';
+
   // Trackpads send a stream of wheel events per gesture; a gap longer than this starts a new one
   const GESTURE_GAP_MS = 180;
   // Minimum time between moves, roughly the length of the smooth scroll
@@ -133,7 +117,7 @@ const itemStyle = (item: StripItem, i: number) =>
     const counter = root.querySelector<HTMLElement>('[data-counter]')!;
     const prev = root.querySelector<HTMLButtonElement>('[data-prev]')!;
     const next = root.querySelector<HTMLButtonElement>('[data-next]')!;
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduceMotion = prefersReducedMotion();
 
     let current = 0;
     let lastWheel = 0;

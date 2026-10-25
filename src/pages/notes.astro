@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import SectionHeading from '../components/SectionHeading.astro';
+import Page from '../components/Page.astro';
+import Section from '../components/Section.astro';
 
 // A planet among some stars, while the notes are still to come
 const SPACE = String.raw`        ~+
@@ -17,18 +18,14 @@ const SPACE = String.raw`        ~+
 ---
 
 <Layout title="Notes" description="Notes by Steven Lu. Work in progress.">
-  <section class="max-w-200 mx-auto p-8 box-border">
-    <div class="mb-12">
-      <SectionHeading>Notes</SectionHeading>
-
-      <div class="border-t border-ink pt-6">
-        <p data-reveal class="text-center text-ink-muted">Work in progress</p>
-        <pre
-          data-reveal
-          aria-hidden="true"
-          class="mx-auto mt-8 w-fit font-mono text-[13px] max-sm:text-[12px] leading-[1.2] text-ink-muted"
-        >{SPACE}</pre>
-      </div>
-    </div>
-  </section>
+  <Page>
+    <Section title="Notes" class="pt-6">
+      <p data-reveal class="text-center text-ink-muted">Work in progress</p>
+      <pre
+        data-reveal
+        aria-hidden="true"
+        class="mx-auto mt-8 w-fit font-mono text-[13px] max-sm:text-[12px] leading-[1.2] text-ink-muted"
+      >{SPACE}</pre>
+    </Section>
+  </Page>
 </Layout>
