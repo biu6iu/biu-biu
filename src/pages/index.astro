@@ -11,7 +11,7 @@ import Layout from '../layouts/Layout.astro';
       aria-label="An animation of the Graham scan algorithm finding the convex hull of random points, drawn in ASCII characters"
       class="transition-opacity duration-500"
     ></canvas>
-    <p id="hull-caption" aria-hidden="true" class="m-0 font-serif text-ink-muted text-[11px] tracking-widest uppercase tabular-nums"></p>
+    <p class="m-0 text-sm text-ink-muted text-center">graham scan</p>
   </div>
 </Layout>
 
@@ -38,7 +38,6 @@ import Layout from '../layouts/Layout.astro';
 
   const container = document.getElementById('hull')!;
   const canvas = document.getElementById('hull-canvas') as HTMLCanvasElement;
-  const caption = document.getElementById('hull-caption')!;
   const ctx = canvas.getContext('2d')!;
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -100,31 +99,42 @@ import Layout from '../layouts/Layout.astro';
     );
   type Grid = ReturnType<typeof blankGrid>;
 
-  const put = (grid: Grid, p: Point, ch: string, tone: Tone, slot = 0) => {
-    grid[GRID - 1 - p.y][p.x * 2 + slot] = { ch, tone };
+  const put = (grid: Grid, p: Point, ch: string, tone: Tone) => {
+    grid[GRID - 1 - p.y][p.x * 2] = { ch, tone };
   };
 
-  /** A line from a to b (ends excluded) with Bresenham's algorithm, drawn in - | / \ by its slope */
+  /**
+   * A line from a to b (ends excluded), sampled on the character grid itself rather than on cells.
+   * Steep lines get one character per row (| or a slash), so they never double up or jog sideways.
+   * Shallow lines get one per column, and ‾ - _ give three heights within a row, so they slope smoothly
+   * instead of stepping in runs of -.
+   */
   const line = (grid: Grid, a: Point, b: Point, tone: Tone) => {
-    const dx = b.x - a.x;
-    const dy = b.y - a.y;
-    const angle = Math.atan2(Math.abs(dy), Math.abs(dx));
-    const ch = angle < Math.PI / 8 ? '-' : angle > (3 * Math.PI) / 8 ? '|' : dx * dy > 0 ? '/' : '\\';
+    // Character coordinates: each point sits on the first column of its cell, and rows count downwards
+    const c0 = a.x * 2;
+    const c1 = b.x * 2;
+    const r0 = GRID - 1 - a.y;
+    const r1 = GRID - 1 - b.y;
+    const dc = c1 - c0;
+    const dr = r1 - r0;
+    // Slope as it looks on screen, where a character is narrower than it is tall
+    const angle = Math.atan2(Math.abs(dr) * lineHeight, Math.abs(dc) * glyphWidth);
+    const set = (row: number, col: number, ch: string) => (grid[row][col] = { ch, tone });
 
-    const adx = Math.abs(dx);
-    const ady = Math.abs(dy);
-    const sx = Math.sign(dx);
-    const sy = Math.sign(dy);
-    let x = a.x;
-    let y = a.y;
-    let error = adx - ady;
-    while (true) {
-      const e2 = 2 * error;
-      if (e2 > -ady) { error -= ady; x += sx; }
-      if (e2 < adx) { error += adx; y += sy; }
-      if (x === b.x && y === b.y) break;
-      put(grid, { x, y }, ch, tone);
-      if (ch === '-') put(grid, { x, y }, '-', tone, 1); // join horizontal runs across the two-character cell
+    if (angle >= Math.PI / 4) {
+      // Up the screen and to the right is /, since rows count downwards
+      const ch = angle > (3 * Math.PI) / 8 ? '|' : dc * dr < 0 ? '/' : '\\';
+      const step = Math.sign(dr);
+      for (let row = r0 + step; row !== r1; row += step) set(row, Math.round(c0 + ((row - r0) * dc) / dr), ch);
+    } else {
+      const step = Math.sign(dc);
+      for (let col = c0 + step; col !== c1; col += step) {
+        const exact = r0 + ((col - c0) * dr) / dc;
+        const row = Math.round(exact);
+        // Where in its row the line passes: the top third, the middle or the bottom third
+        const offset = exact - row;
+        set(row, col, offset < -1 / 6 ? '‾' : offset > 1 / 6 ? '_' : '-');
+      }
     }
   };
 
@@ -170,12 +180,10 @@ import Layout from '../layouts/Layout.astro';
 
     if (!animate) {
       scene = { ...scene, points, pivot, hull };
-      caption.textContent = `Convex hull · ${hull.length} of ${count} points`;
       render();
       return;
     }
 
-    caption.textContent = `Graham scan · ${count} points`;
     for (const p of points) {
       scene.points.push(p);
       render();
@@ -183,11 +191,9 @@ import Layout from '../layouts/Layout.astro';
     }
 
     scene.pivot = pivot;
-    caption.textContent = 'Pivot · the lowest point';
     render();
     await visibleSleep(TIMING.pivot);
 
-    caption.textContent = 'Sorting by polar angle';
     for (const p of sorted) {
       scene.ray = p;
       render();
@@ -199,14 +205,12 @@ import Layout from '../layouts/Layout.astro';
     for (const step of steps) {
       if (step.kind === 'check') {
         scene.candidate = [step.from, step.to];
-        caption.textContent = `Scanning · stack of ${scene.stack.length}`;
         render();
         await visibleSleep(TIMING.check);
       } else if (step.kind === 'pop') {
         // A right turn: the last edge comes off the stack
         scene.stack.pop();
         scene.candidate = null;
-        caption.textContent = 'Right turn · pop';
         render();
         await visibleSleep(TIMING.pop);
       } else {
@@ -218,7 +222,6 @@ import Layout from '../layouts/Layout.astro';
     }
 
     scene.hull = hull;
-    caption.textContent = `Convex hull · ${hull.length} of ${count} points`;
     render();
     await visibleSleep(TIMING.done);
   };

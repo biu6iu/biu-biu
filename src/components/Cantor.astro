@@ -1,0 +1,130 @@
+---
+// ASCII Cantor's diagonal argument for the contact page. A list of infinite binary sequences is shown with
+// its diagonal in black; one by one the diagonal digits are flipped to build a new sequence s underneath,
+// which so differs from every sequence in the list at its diagonal digit, and the list can't hold them all.
+// Between rounds the grid fades out and back in with new sequences.
+---
+
+<div class="flex flex-col items-center" data-cantor>
+  <pre
+    aria-hidden="true"
+    class="m-0 font-mono text-[13px] max-sm:text-[12px] leading-[1.3] text-ink-muted transition-opacity duration-500"
+    data-cantor-grid
+  ></pre>
+  <p class="m-0 mt-3 text-sm text-ink-muted text-center">cantor's diagonal argument</p>
+</div>
+
+<script>
+  import { antidiagonal, randomSequences } from '../lib/cantor.ts';
+
+  // A square: each sequence shows as many digits as there are sequences, so s, built from the diagonal,
+  // is exactly as long as the rows above it
+  const SEQUENCES = 6;
+  // Each diagonal digit is picked out, then its flip drops into s
+  const LIGHT_MS = 700;
+  const DROP_MS = 600;
+  const START_PAUSE_MS = 1200;
+  const END_PAUSE_MS = 3000;
+  // Matches the <pre>'s opacity transition
+  const FADE_MS = 500;
+
+  const SUBSCRIPT = '₀₁₂₃₄₅₆₇₈₉';
+  const sub = (n: number) => [...String(n)].map((d) => SUBSCRIPT[Number(d)]).join('');
+  // The diagonal and s are in black; everything else keeps the grey of the <pre>
+  const ink = (text: string) => `<span class="text-ink">${text}</span>`;
+
+  document.querySelectorAll<HTMLElement>('[data-cantor]').forEach((root) => {
+    const grid = root.querySelector<HTMLElement>('[data-cantor-grid]')!;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    let rows: number[][] = [];
+    let escape: number[] = [];
+    // Diagonal digits picked out so far, and digits of s written so far
+    let lit = 0;
+    let built = 0;
+
+    const reset = () => {
+      rows = randomSequences(SEQUENCES, SEQUENCES);
+      escape = antidiagonal(rows);
+      lit = built = 0;
+    };
+
+    // The next beat and how long it lasts, or null once s is complete
+    const advance = (): number | null => {
+      if (built < lit) {
+        built++;
+        return built === SEQUENCES ? END_PAUSE_MS : DROP_MS;
+      }
+      if (lit < SEQUENCES) {
+        lit++;
+        return LIGHT_MS;
+      }
+      return null;
+    };
+
+    const draw = () => {
+      // The digit being flipped is bracketed
+      const current = lit > built ? lit - 1 : -1;
+      const lines = rows.map((row, i) => {
+        const cells = row
+          .map((d, j) => {
+            if (j !== i) return ` ${d} `;
+            return i === current ? ink(`[${d}]`) : ` ${ink(String(d))} `;
+          })
+          .join('');
+        return `s${sub(i + 1)} = ${cells} …`;
+      });
+      const flipped = escape.slice(0, built).map((d) => ` ${ink(String(d))} `).join('');
+      lines.push('', ` s = ${flipped}${built ? ' …' : ''}`);
+      grid.innerHTML = lines.join('\n');
+    };
+
+    reset();
+
+    if (reduceMotion) {
+      while (advance() !== null);
+      draw();
+      return;
+    }
+
+    // Runs on its own clock, which only moves while it's on screen, so it resumes where it was
+    let clock = 0;
+    let nextAt = START_PAUSE_MS;
+    let frame = 0;
+    let last = 0;
+    let fading = false;
+    const tick = (now: number) => {
+      clock += Math.min(100, now - last);
+      last = now;
+      let changed = false;
+      while (clock >= nextAt) {
+        // Once s is complete the grid fades out, swaps in new sequences while hidden, and fades back in
+        if (fading) {
+          reset();
+          grid.style.opacity = '';
+          fading = false;
+          nextAt += START_PAUSE_MS;
+        } else {
+          const wait = advance();
+          if (wait === null) {
+            grid.style.opacity = '0';
+            fading = true;
+            nextAt += FADE_MS;
+          } else nextAt += wait;
+        }
+        changed = true;
+      }
+      if (changed) draw();
+      frame = requestAnimationFrame(tick);
+    };
+
+    draw();
+    new IntersectionObserver(([entry]) => {
+      cancelAnimationFrame(frame);
+      if (entry.isIntersecting) {
+        last = performance.now();
+        frame = requestAnimationFrame(tick);
+      }
+    }).observe(root);
+  });
+</script>

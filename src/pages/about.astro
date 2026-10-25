@@ -2,10 +2,8 @@
 import Layout from '../layouts/Layout.astro';
 import TimelineEntry from '../components/TimelineEntry.astro';
 import SectionHeading from '../components/SectionHeading.astro';
-import SectionLink from '../components/SectionLink.astro';
+import Pigeonholes from '../components/Pigeonholes.astro';
 import { EDUCATION, EXPERIENCE, EXTRACURRICULARS } from '../data/about.ts';
-
-const base = import.meta.env.BASE_URL;
 ---
 
 <Layout title="About">
@@ -15,8 +13,9 @@ const base = import.meta.env.BASE_URL;
       <div class="border-t border-ink pt-4 [&>p]:my-1.5">
         <p>Hi, my name is Steven!</p>
         <p>I'm an undergrad at the University of Melbourne, studying computing and maths.</p>
-        <p>I love learning algorithms (such as Graham Scan on the home page), and applying maths to the real world.</p>
-        <p>I also enjoy watching movies and listening to music, so go judge my <a href="https://letterboxd.com/6iubiu/" target="_blank" rel="noopener noreferrer">Letterboxd</a> and <a href="https://www.last.fm/user/biubiuuu" target="_blank" rel="noopener noreferrer">last.fm</a></p>
+        <p>I love learning algorithms and applying maths to the real world.</p>
+        <p>(I've scattered a few of my favourite algorithms, concepts, and whatever on each page!)</p>
+        <p>I also enjoy watching movies and listening to music, so go judge my <a href="https://letterboxd.com/6iubiu/" target="_blank" rel="noopener noreferrer">Letterboxd</a> and <a href="https://www.last.fm/user/biubiuuu" target="_blank" rel="noopener noreferrer">last.fm</a> :)</p>
       </div>
     </div>
 
@@ -55,8 +54,9 @@ const base = import.meta.env.BASE_URL;
       </div>
     </div>
 
-    <div data-reveal class="mb-12">
-      <p>Since you've scrolled this far, you might as well check out the <SectionLink href={`${base}photography`} text="collections page" /></p>
+    <!-- Pulled up: the empty sky above the holes already reads as space after Skills -->
+    <div data-reveal class="-mt-8 mb-12">
+      <Pigeonholes />
     </div>
   </section>
 </Layout>

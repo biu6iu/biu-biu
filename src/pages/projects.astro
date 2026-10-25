@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import ProjectListItem from '../components/ProjectListItem.astro';
 import SectionHeading from '../components/SectionHeading.astro';
+import TortoiseHare from '../components/TortoiseHare.astro';
 import { projectsByYear } from '../data/projects.ts';
 ---
 
@@ -26,6 +27,10 @@ import { projectsByYear } from '../data/projects.ts';
           </div>
         ))}
       </div>
+    </div>
+
+    <div data-reveal class="mb-12">
+      <TortoiseHare />
     </div>
   </section>
 </Layout>

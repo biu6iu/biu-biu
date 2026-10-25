@@ -1,0 +1,140 @@
+---
+// ASCII pigeonhole principle for the about page: one more pigeon than holes, so after every landing some
+// hole holds two. The pigeon that flies next always leaves the hole the last one landed in.
+---
+
+<div class="flex flex-col items-center" data-pigeonholes>
+  <pre
+    aria-hidden="true"
+    class="m-0 font-mono text-[15px] max-sm:text-[12px] leading-[1.15] text-ink-muted"
+    data-pigeonholes-grid
+  ></pre>
+  <p class="m-0 mt-3 text-sm text-ink-muted text-center">pigeonhole principle</p>
+</div>
+
+<script>
+  import { land, nextFlight, roost, type Flight, type Pigeon } from '../lib/pigeonholes.ts';
+
+  const HOLE_WIDTH = 7; // "|     |": five spaces inside, room for two pigeons
+  const GAP = 1;
+  const SKY_ROWS = 4; // flight space above the holes
+  // As many holes as fit across, within these bounds
+  const MIN_HOLES = 5;
+  const MAX_HOLES = 9;
+  const ROWS = SKY_ROWS + 3; // sky, hole walls, hole floor where the pigeons sit, hole bottom
+  const WALL_ROW = SKY_ROWS;
+  const SEAT_ROW = SKY_ROWS + 1;
+  const BOTTOM_ROW = SKY_ROWS + 2;
+  // Wait between flights
+  const REST_MS = 700;
+  // A flight takes this long plus a little per column travelled, so long hops aren't rushed
+  const FLIGHT_BASE_MS = 500;
+  const FLIGHT_PER_COL_MS = 45;
+  // Wings flap this often while in the air
+  const FLAP_MS = 130;
+
+  type Airborne = Flight & { start: number; duration: number };
+
+  document.querySelectorAll<HTMLElement>('[data-pigeonholes]').forEach((root) => {
+    const grid = root.querySelector<HTMLElement>('[data-pigeonholes-grid]')!;
+    // Measure one character of the monospace font to see how many holes fit the width available
+    grid.textContent = '0'.repeat(10);
+    const charWidth = grid.getBoundingClientRect().width / 10;
+    const fit = Math.floor((root.clientWidth / charWidth + GAP) / (HOLE_WIDTH + GAP));
+    const holes = Math.max(MIN_HOLES, Math.min(MAX_HOLES, fit));
+    const cols = holes * (HOLE_WIDTH + GAP) - GAP;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const holeLeft = (hole: number) => hole * (HOLE_WIDTH + GAP);
+    // The two seats sit at the 2nd and 4th spaces inside the hole: "| o o |"
+    const seatX = (p: Pigeon) => holeLeft(p.hole) + 2 + p.slot * 2;
+
+    const birds = roost(holes);
+
+    let flight: Airborne | null = null;
+    let restUntil = 0;
+    let lastHtml = '';
+
+    const startFlight = (now: number) => {
+      const next = nextFlight(birds);
+      const distance = Math.abs(seatX(next.to) - seatX(next.pigeon));
+      flight = { ...next, start: now, duration: FLIGHT_BASE_MS + distance * FLIGHT_PER_COL_MS };
+    };
+
+    // Where the flying pigeon is: straight up out of the hole, across the sky, and down into the next
+    const flyingAt = (f: Airborne, now: number) => {
+      const t = Math.min(1, (now - f.start) / f.duration);
+      const across = Math.min(1, Math.max(0, (t - 0.2) / 0.6));
+      const eased = across * across * (3 - 2 * across);
+      const x = Math.round(seatX(f.pigeon) + (seatX(f.to) - seatX(f.pigeon)) * eased);
+      const y = Math.round(SEAT_ROW - SEAT_ROW * Math.sin(Math.PI * t));
+      // Wings only flap in the open sky; inside a hole it's tucked in like the others
+      const glyph = y > WALL_ROW - 1 ? 'o' : Math.floor((now - f.start) / FLAP_MS) % 2 ? '^' : 'v';
+      return { x, y, glyph, done: t === 1 };
+    };
+
+    const draw = (now: number) => {
+      const chars = Array.from({ length: ROWS }, () => Array<string>(cols).fill(' '));
+      const isPigeon = Array.from({ length: ROWS }, () => Array<boolean>(cols).fill(false));
+      const put = (x: number, y: number, c: string, pigeon = false) => {
+        chars[y][x] = c;
+        isPigeon[y][x] = pigeon;
+      };
+
+      for (let h = 0; h < holes; h++) {
+        const left = holeLeft(h);
+        const right = left + HOLE_WIDTH - 1;
+        for (const row of [WALL_ROW, SEAT_ROW]) {
+          put(left, row, '|');
+          put(right, row, '|');
+        }
+        put(left, BOTTOM_ROW, "'");
+        put(right, BOTTOM_ROW, "'");
+        for (let x = left + 1; x < right; x++) put(x, BOTTOM_ROW, '-');
+      }
+
+      birds.pigeons.forEach((p) => {
+        if (p !== flight?.pigeon) put(seatX(p), SEAT_ROW, 'o', true);
+      });
+
+      if (flight) {
+        const { x, y, glyph, done } = flyingAt(flight, now);
+        put(x, y, glyph, true);
+        if (done) {
+          land(birds, flight);
+          flight = null;
+          restUntil = now + REST_MS;
+        }
+      }
+
+      // Pigeons in the page's ink colour, the holes in the muted colour the <pre> already has
+      const html = chars
+        .map((row, y) => row.map((c, x) => (isPigeon[y][x] ? `<span class="text-ink">${c}</span>` : c)).join(''))
+        .join('\n');
+      if (html !== lastHtml) {
+        grid.innerHTML = html;
+        lastHtml = html;
+      }
+    };
+
+    if (reduceMotion) {
+      draw(0);
+      return;
+    }
+
+    let frame = 0;
+    const tick = (now: number) => {
+      if (!flight && now >= restUntil) startFlight(now);
+      draw(now);
+      frame = requestAnimationFrame(tick);
+    };
+
+    // Only animate while on screen
+    restUntil = performance.now() + REST_MS;
+    draw(performance.now());
+    new IntersectionObserver(([entry]) => {
+      cancelAnimationFrame(frame);
+      if (entry.isIntersecting) frame = requestAnimationFrame(tick);
+    }).observe(root);
+  });
+</script>
