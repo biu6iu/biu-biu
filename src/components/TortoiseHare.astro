@@ -7,7 +7,6 @@
 <div class="flex flex-col items-center" data-floyd>
   <pre aria-hidden="true" class="m-0 font-mono text-[13px] max-sm:text-[12px] leading-[1.15] text-ink-muted" data-floyd-grid></pre>
   <p class="m-0 mt-3 text-sm text-ink-muted text-center">floyd's cycle detection</p>
-  <p class="m-0 mt-1 text-xs text-ink-muted text-center" data-floyd-status></p>
 </div>
 
 <script>
@@ -25,18 +24,12 @@
   const MEET_PAUSE_MS = 1400;
   const FOUND_PAUSE_MS = 3000;
 
-  const STATUS = {
-    chase: 'tortoise moves 1, hare moves 2',
-    met: 'they meet inside the loop',
-    restart: 'tortoise back to the head, both move 1',
-    found: 'they meet again where the loop starts',
-  };
-
-  type Phase = keyof typeof STATUS;
+  // chase: tortoise moves 1, hare 2 · met: they meet inside the loop
+  // restart: tortoise back to the head, both move 1 · found: they meet again where the loop starts
+  type Phase = 'chase' | 'met' | 'restart' | 'found';
 
   document.querySelectorAll<HTMLElement>('[data-floyd]').forEach((root) => {
     const grid = root.querySelector<HTMLElement>('[data-floyd-grid]')!;
-    const status = root.querySelector<HTMLElement>('[data-floyd-status]')!;
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     // Measure one character of the monospace font to see how many nodes fit across
@@ -112,7 +105,6 @@
       grid.innerHTML = chars
         .map((row, y) => row.map((c, x) => (ink[y][x] ? `<span class="text-ink">${c}</span>` : c)).join(''))
         .join('\n');
-      status.textContent = `${STATUS[phase]} · T tortoise, H hare`;
     };
 
     // Moves the animation on by one beat and returns how long to wait before the next

@@ -3,8 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import SectionHeading from '../components/SectionHeading.astro';
 import SectionLink from '../components/SectionLink.astro';
 import TimelineRow from '../components/TimelineRow.astro';
-
-const base = import.meta.env.BASE_URL;
+import Cantor from '../components/Cantor.astro';
 
 const EMAIL = 'ajlu0414@gmail.com';
 const GITHUB_USER = 'biu6iu';
@@ -49,7 +48,9 @@ const CONTACT: Row[] = [
       </div>
     </div>
 
-    <p class="text-ink-muted">Or see what I've been photographing on the <SectionLink href={`${base}photography`} text="collections page" /></p>
+    <div data-reveal class="mb-12">
+      <Cantor />
+    </div>
   </section>
 </Layout>
 
