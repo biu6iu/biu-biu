@@ -10,6 +10,8 @@
 </div>
 
 <script>
+  import { floyd, type FloydPhase, type FloydStep } from '../lib/floyd.ts';
+
   // Nodes sit 4 columns apart: "o---o"
   const SPACING = 4;
   const ROWS = 5; // the loop's top row, its two diagonals, the tail's row through its middle, its bottom row
@@ -19,14 +21,16 @@
   const MAX_TAIL = 6;
   const MIN_EDGE = 2;
   const MAX_EDGE = 7;
-  // The hare moves every tick and the tortoise every other tick
+  // The hare hops every tick while chasing; once the tortoise restarts, both move every other tick
   const TICK_MS = 260;
-  const MEET_PAUSE_MS = 1400;
-  const FOUND_PAUSE_MS = 3000;
-
-  // chase: tortoise moves 1, hare 2 · met: they meet inside the loop
-  // restart: tortoise back to the head, both move 1 · found: they meet again where the loop starts
-  type Phase = 'chase' | 'met' | 'restart' | 'found';
+  // How long each step stays on screen, by its phase
+  const HOLD_MS: Record<FloydPhase, number> = {
+    start: TICK_MS * 2,
+    chase: TICK_MS,
+    met: 1400,
+    restart: TICK_MS * 2,
+    found: 3000,
+  };
 
   document.querySelectorAll<HTMLElement>('[data-floyd]').forEach((root) => {
     const grid = root.querySelector<HTMLElement>('[data-floyd-grid]')!;
@@ -41,15 +45,10 @@
 
     let tail = 0; // nodes 0 .. tail-1 lead to the loop, node `tail` is where it starts
     let edge = 0;
-    let loop = 0;
     let cols = 0;
     let positions: { x: number; y: number }[] = [];
-    let tortoise = 0;
-    let hare = 0;
-    let phase: Phase = 'chase';
-    let tick = 0;
-
-    const next = (node: number) => (node === tail + loop - 1 ? tail : node + 1);
+    let steps: FloydStep[] = [];
+    let current = 0; // the step on screen
 
     // The loop goes clockwise from where the tail joins it: up a diagonal, along the top, down to its
     // far end, back along the bottom and up into the start again
@@ -61,7 +60,6 @@
         if (tail > MIN_TAIL && (tail >= edge || edge === MIN_EDGE)) tail--;
         else edge--;
       }
-      loop = 2 * edge + 2;
       const start = tail * SPACING;
       cols = start + edge * SPACING + 1;
 
@@ -71,9 +69,8 @@
       positions.push({ x: start + edge * SPACING, y: TAIL_ROW });
       for (let j = edge - 1; j >= 0; j--) positions.push({ x: start + 2 + j * SPACING, y: ROWS - 1 });
 
-      tortoise = hare = 0;
-      phase = 'chase';
-      tick = 0;
+      steps = floyd({ tail, loop: 2 * edge + 2 });
+      current = 0;
     };
 
     const draw = () => {
@@ -96,6 +93,7 @@
         chars[y][x] = c;
         ink[y][x] = true;
       };
+      const { phase, tortoise, hare } = steps[current];
       if (tortoise === hare) mark(tortoise, phase === 'found' ? '@' : '*');
       else {
         mark(tortoise, 'T');
@@ -107,51 +105,25 @@
         .join('\n');
     };
 
-    // Moves the animation on by one beat and returns how long to wait before the next
+    // Moves on to the next step, or a new list after the last, and returns how long it stays on screen
     const advance = (): number => {
-      switch (phase) {
-        case 'chase':
-          tick++;
-          hare = next(hare);
-          if (tick % 2 === 0) {
-            tortoise = next(tortoise);
-            if (tortoise === hare) {
-              phase = 'met';
-              return MEET_PAUSE_MS;
-            }
-          }
-          return TICK_MS;
-        case 'met':
-          phase = 'restart';
-          tortoise = 0;
-          return TICK_MS * 2;
-        case 'restart':
-          tortoise = next(tortoise);
-          hare = next(hare);
-          if (tortoise === hare) {
-            phase = 'found';
-            return FOUND_PAUSE_MS;
-          }
-          return TICK_MS * 2;
-        case 'found':
-          newList();
-          return TICK_MS * 2;
-      }
+      if (current === steps.length - 1) newList();
+      else current++;
+      return HOLD_MS[steps[current].phase];
     };
 
     newList();
 
     if (reduceMotion) {
       // Show the answer: both pointers on the node where the loop starts
-      tortoise = hare = tail;
-      phase = 'found';
+      current = steps.length - 1;
       draw();
       return;
     }
 
     // Runs on its own clock, which only moves while it's on screen, so it resumes where it was
     let clock = 0;
-    let nextAt = TICK_MS * 2;
+    let nextAt = HOLD_MS.start;
     let frame = 0;
     let last = 0;
     const loopFrame = (now: number) => {

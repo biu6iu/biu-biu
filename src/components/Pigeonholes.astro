@@ -13,6 +13,8 @@
 </div>
 
 <script>
+  import { land, nextFlight, roost, type Flight, type Pigeon } from '../lib/pigeonholes.ts';
+
   const HOLE_WIDTH = 7; // "|     |": five spaces inside, room for two pigeons
   const GAP = 1;
   const SKY_ROWS = 4; // flight space above the holes
@@ -31,8 +33,7 @@
   // Wings flap this often while in the air
   const FLAP_MS = 130;
 
-  type Pigeon = { hole: number; slot: 0 | 1 };
-  type Flight = { pigeon: Pigeon; to: Pigeon; start: number; duration: number };
+  type Airborne = Flight & { start: number; duration: number };
 
   document.querySelectorAll<HTMLElement>('[data-pigeonholes]').forEach((root) => {
     const grid = root.querySelector<HTMLElement>('[data-pigeonholes-grid]')!;
@@ -48,29 +49,20 @@
     // The two seats sit at the 2nd and 4th spaces inside the hole: "| o o |"
     const seatX = (p: Pigeon) => holeLeft(p.hole) + 2 + p.slot * 2;
 
-    // One pigeon per hole, sitting in a random seat, plus one extra sharing a random hole
-    const pigeons: Pigeon[] = Array.from({ length: holes }, (_, hole) => ({ hole, slot: Math.random() < 0.5 ? 0 : 1 }));
-    const crowded = Math.floor(Math.random() * holes);
-    let newest: Pigeon = { hole: crowded, slot: pigeons[crowded].slot === 0 ? 1 : 0 };
-    pigeons.push(newest);
+    const birds = roost(holes);
 
-    let flight: Flight | null = null;
+    let flight: Airborne | null = null;
     let restUntil = 0;
     let lastHtml = '';
 
-    // The pigeon already in the crowded hole gets bumped out by the one that just arrived
     const startFlight = (now: number) => {
-      const pigeon = pigeons.find((p) => p.hole === newest.hole && p !== newest)!;
-      let hole = Math.floor(Math.random() * (holes - 1));
-      if (hole >= pigeon.hole) hole++; // any hole but its own
-      const resident = pigeons.find((p) => p.hole === hole)!;
-      const to: Pigeon = { hole, slot: resident.slot === 0 ? 1 : 0 };
-      const distance = Math.abs(seatX(to) - seatX(pigeon));
-      flight = { pigeon, to, start: now, duration: FLIGHT_BASE_MS + distance * FLIGHT_PER_COL_MS };
+      const next = nextFlight(birds);
+      const distance = Math.abs(seatX(next.to) - seatX(next.pigeon));
+      flight = { ...next, start: now, duration: FLIGHT_BASE_MS + distance * FLIGHT_PER_COL_MS };
     };
 
     // Where the flying pigeon is: straight up out of the hole, across the sky, and down into the next
-    const flyingAt = (f: Flight, now: number) => {
+    const flyingAt = (f: Airborne, now: number) => {
       const t = Math.min(1, (now - f.start) / f.duration);
       const across = Math.min(1, Math.max(0, (t - 0.2) / 0.6));
       const eased = across * across * (3 - 2 * across);
@@ -101,7 +93,7 @@
         for (let x = left + 1; x < right; x++) put(x, BOTTOM_ROW, '-');
       }
 
-      pigeons.forEach((p) => {
+      birds.pigeons.forEach((p) => {
         if (p !== flight?.pigeon) put(seatX(p), SEAT_ROW, 'o', true);
       });
 
@@ -109,8 +101,7 @@
         const { x, y, glyph, done } = flyingAt(flight, now);
         put(x, y, glyph, true);
         if (done) {
-          Object.assign(flight.pigeon, flight.to);
-          newest = flight.pigeon;
+          land(birds, flight);
           flight = null;
           restUntil = now + REST_MS;
         }

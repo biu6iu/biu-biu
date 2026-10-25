@@ -10,6 +10,8 @@
 </div>
 
 <script>
+  import { antidiagonal, randomSequences } from '../lib/cantor.ts';
+
   // Rows on screen at once; the bottom one is where diagonal digits are flipped into s
   const VISIBLE = 6;
   // Digits per row, as many as fit within these bounds; s is complete once it's as long as the rows shown
@@ -21,7 +23,6 @@
   const TOP_OPACITY = 0.3;
 
   const ink = (text: string) => `<span class="text-ink">${text}</span>`;
-  const randomDigits = (n: number) => Array.from({ length: n }, () => (Math.random() < 0.5 ? 0 : 1));
 
   document.querySelectorAll<HTMLElement>('[data-cantor]').forEach((root) => {
     const grid = root.querySelector<HTMLElement>('[data-cantor-grid]')!;
@@ -38,7 +39,7 @@
     let bottom = 0;
 
     const reset = () => {
-      rows = Array.from({ length: digits + VISIBLE }, () => randomDigits(digits));
+      rows = randomSequences(digits + VISIBLE, digits);
       bottom = 0;
     };
 
@@ -56,7 +57,7 @@
         lines.push(`<span style="opacity: ${opacity.toFixed(2)}">${cells}</span>`);
       }
       // s has one flipped digit for every row that has reached the bottom, each straight under its column
-      const flipped = rows.slice(0, bottom + 1).map((row, i) => ink(String(1 - row[i])));
+      const flipped = antidiagonal(rows.slice(0, bottom + 1)).map((d) => ink(String(d)));
       lines.push('', flipped.join(' '));
       grid.innerHTML = lines.join('\n');
     };
