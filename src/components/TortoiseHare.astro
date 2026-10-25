@@ -1,0 +1,186 @@
+---
+// ASCII Floyd's cycle detection for the projects page. A linked list runs into a loop; the tortoise moves
+// one node at a time and the hare two, until they meet inside the loop. The tortoise then goes back to the
+// head and both move one node at a time, meeting again where the loop starts. Then a new list is drawn.
+---
+
+<div class="flex flex-col items-center" data-floyd>
+  <pre aria-hidden="true" class="m-0 font-mono text-[13px] max-sm:text-[12px] leading-[1.15] text-ink-muted" data-floyd-grid></pre>
+  <p class="m-0 mt-3 text-sm text-ink-muted text-center">floyd's cycle detection</p>
+  <p class="m-0 mt-1 text-xs text-ink-muted text-center" data-floyd-status></p>
+</div>
+
+<script>
+  // Nodes sit 4 columns apart: "o---o"
+  const SPACING = 4;
+  const ROWS = 5; // the loop's top row, its two diagonals, the tail's row through its middle, its bottom row
+  const TAIL_ROW = 2;
+  // Nodes before the loop, and nodes along the loop's top (and bottom) edge, picked at random in these bounds
+  const MIN_TAIL = 2;
+  const MAX_TAIL = 6;
+  const MIN_EDGE = 2;
+  const MAX_EDGE = 7;
+  // The hare moves every tick and the tortoise every other tick
+  const TICK_MS = 260;
+  const MEET_PAUSE_MS = 1400;
+  const FOUND_PAUSE_MS = 3000;
+
+  const STATUS = {
+    chase: 'tortoise moves 1, hare moves 2',
+    met: 'they meet inside the loop',
+    restart: 'tortoise back to the head, both move 1',
+    found: 'they meet again where the loop starts',
+  };
+
+  type Phase = keyof typeof STATUS;
+
+  document.querySelectorAll<HTMLElement>('[data-floyd]').forEach((root) => {
+    const grid = root.querySelector<HTMLElement>('[data-floyd-grid]')!;
+    const status = root.querySelector<HTMLElement>('[data-floyd-status]')!;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Measure one character of the monospace font to see how many nodes fit across
+    grid.textContent = '0'.repeat(10);
+    const charWidth = grid.getBoundingClientRect().width / 10;
+    const maxNodesAcross = Math.floor((root.clientWidth / charWidth - 1) / SPACING);
+
+    const randomIn = (min: number, max: number) => min + Math.floor(Math.random() * (max - min + 1));
+
+    let tail = 0; // nodes 0 .. tail-1 lead to the loop, node `tail` is where it starts
+    let edge = 0;
+    let loop = 0;
+    let cols = 0;
+    let positions: { x: number; y: number }[] = [];
+    let tortoise = 0;
+    let hare = 0;
+    let phase: Phase = 'chase';
+    let tick = 0;
+
+    const next = (node: number) => (node === tail + loop - 1 ? tail : node + 1);
+
+    // The loop goes clockwise from where the tail joins it: up a diagonal, along the top, down to its
+    // far end, back along the bottom and up into the start again
+    const newList = () => {
+      tail = randomIn(MIN_TAIL, MAX_TAIL);
+      edge = randomIn(MIN_EDGE, MAX_EDGE);
+      // Shrink whichever part is longer until it fits
+      while (tail + edge > maxNodesAcross && tail + edge > MIN_TAIL + MIN_EDGE) {
+        if (tail > MIN_TAIL && (tail >= edge || edge === MIN_EDGE)) tail--;
+        else edge--;
+      }
+      loop = 2 * edge + 2;
+      const start = tail * SPACING;
+      cols = start + edge * SPACING + 1;
+
+      positions = [];
+      for (let i = 0; i <= tail; i++) positions.push({ x: i * SPACING, y: TAIL_ROW });
+      for (let j = 0; j < edge; j++) positions.push({ x: start + 2 + j * SPACING, y: 0 });
+      positions.push({ x: start + edge * SPACING, y: TAIL_ROW });
+      for (let j = edge - 1; j >= 0; j--) positions.push({ x: start + 2 + j * SPACING, y: ROWS - 1 });
+
+      tortoise = hare = 0;
+      phase = 'chase';
+      tick = 0;
+    };
+
+    const draw = () => {
+      const chars = Array.from({ length: ROWS }, () => Array<string>(cols).fill(' '));
+      const ink = Array.from({ length: ROWS }, () => Array<boolean>(cols).fill(false));
+      const start = tail * SPACING;
+      const far = start + edge * SPACING;
+
+      for (let x = 0; x < start; x++) chars[TAIL_ROW][x] = '-';
+      for (let x = start + 2; x < far - 1; x++) chars[0][x] = chars[ROWS - 1][x] = '-';
+      chars[1][start + 1] = '/';
+      chars[3][start + 1] = '\\';
+      chars[1][far - 1] = '\\';
+      chars[3][far - 1] = '/';
+      positions.forEach(({ x, y }) => (chars[y][x] = 'o'));
+
+      // Together they're drawn as one mark
+      const mark = (node: number, c: string) => {
+        const { x, y } = positions[node];
+        chars[y][x] = c;
+        ink[y][x] = true;
+      };
+      if (tortoise === hare) mark(tortoise, phase === 'found' ? '@' : '*');
+      else {
+        mark(tortoise, 'T');
+        mark(hare, 'H');
+      }
+
+      grid.innerHTML = chars
+        .map((row, y) => row.map((c, x) => (ink[y][x] ? `<span class="text-ink">${c}</span>` : c)).join(''))
+        .join('\n');
+      status.textContent = `${STATUS[phase]} · T tortoise, H hare`;
+    };
+
+    // Moves the animation on by one beat and returns how long to wait before the next
+    const advance = (): number => {
+      switch (phase) {
+        case 'chase':
+          tick++;
+          hare = next(hare);
+          if (tick % 2 === 0) {
+            tortoise = next(tortoise);
+            if (tortoise === hare) {
+              phase = 'met';
+              return MEET_PAUSE_MS;
+            }
+          }
+          return TICK_MS;
+        case 'met':
+          phase = 'restart';
+          tortoise = 0;
+          return TICK_MS * 2;
+        case 'restart':
+          tortoise = next(tortoise);
+          hare = next(hare);
+          if (tortoise === hare) {
+            phase = 'found';
+            return FOUND_PAUSE_MS;
+          }
+          return TICK_MS * 2;
+        case 'found':
+          newList();
+          return TICK_MS * 2;
+      }
+    };
+
+    newList();
+
+    if (reduceMotion) {
+      // Show the answer: both pointers on the node where the loop starts
+      tortoise = hare = tail;
+      phase = 'found';
+      draw();
+      return;
+    }
+
+    // Runs on its own clock, which only moves while it's on screen, so it resumes where it was
+    let clock = 0;
+    let nextAt = TICK_MS * 2;
+    let frame = 0;
+    let last = 0;
+    const loopFrame = (now: number) => {
+      clock += Math.min(100, now - last);
+      last = now;
+      let changed = false;
+      while (clock >= nextAt) {
+        nextAt += advance();
+        changed = true;
+      }
+      if (changed) draw();
+      frame = requestAnimationFrame(loopFrame);
+    };
+
+    draw();
+    new IntersectionObserver(([entry]) => {
+      cancelAnimationFrame(frame);
+      if (entry.isIntersecting) {
+        last = performance.now();
+        frame = requestAnimationFrame(loopFrame);
+      }
+    }).observe(root);
+  });
+</script>
